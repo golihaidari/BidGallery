@@ -89,11 +89,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      
       # List dist files for debugging
       - name: List frontend build files
-        run: |
-          echo "Contents of frontend/dist:"
-          ls -R ./frontend/dist
+        run: ls -R ./ # the artifact is downloaded to the root
 
       - name: Deploy frontend to GitHub Pages
         id: deployment
