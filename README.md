@@ -1,4 +1,4 @@
-**ArtBid** is a web application designed for a group of artists to showcase and sell their artworks through a single online channel.
+**BidGallery** is a web application designed for a group of artists to showcase and sell their artworks through a single online channel.
 The platform introduces an innovative bidding system where customers can "Bid What You Want," and if their bid meets a secret minimum price, the purchase is confirmed automatically.
 
 Key Features:
