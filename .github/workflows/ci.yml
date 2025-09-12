@@ -46,7 +46,7 @@ jobs:
         working-directory: ./frontend
 
       - name: Run frontend tests
-        run: npm test -- --watch=false --ci
+        run: npm test -- --watch=false
         working-directory: ./frontend
 
       - name: Build frontend project
