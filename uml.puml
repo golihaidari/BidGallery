@@ -1,0 +1,28 @@
+@startuml
+!define table(x) class x <<(T,#FFAAAA)>>
+hide methods
+hide stereotype
+
+' Tables
+table(Role) {
+    + role_id : int <<PK>>
+    --
+    role_name : string 
+    description : string
+}
+
+table(User) {
+    + user_id : int <<PK>>
+    --
+    name : string
+    email : string
+    password: string
+    role_id : int <<FK>>
+}
+
+
+
+' Relationships
+Role ||--o{ User : has
+
+@enduml
