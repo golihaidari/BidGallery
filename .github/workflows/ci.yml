@@ -89,6 +89,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # List dist files for debugging
+      - name: List frontend build files
+        run: |
+          echo "Contents of frontend/dist:"
+          ls -R ./frontend/dist
+
       - name: Deploy frontend to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
