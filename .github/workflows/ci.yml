@@ -12,7 +12,6 @@ permissions:
   id-token: write
 
 jobs:
-  # Build & Test for frontend (backend placeholder included)
   build-and-test:
     runs-on: ubuntu-latest
     strategy:
@@ -33,7 +32,12 @@ jobs:
 
       # ==== Frontend ====
       - name: Install frontend dependencies
-        run: npm ci
+        run: |
+          if [ -f ./frontend/package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
         working-directory: ./frontend
 
       - name: TypeScript check (frontend)
@@ -82,13 +86,9 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/fullstack-app:latest
 
-  # Separate deploy job (Frontend → GitHub Pages)
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Deploy frontend to GitHub Pages
