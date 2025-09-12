@@ -32,8 +32,10 @@ jobs:
 
       # ==== Frontend ====
       - name: Install frontend dependencies
+        
         run: |
-          if [ -f ./frontend/package-lock.json ]; then
+          cd frontend
+          if [ -f package-lock.json ]; then
             npm ci
           else
             npm install
