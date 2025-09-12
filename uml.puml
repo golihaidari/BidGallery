@@ -1,28 +1,70 @@
 @startuml
-!define table(x) class x <<(T,#FFAAAA)>>
-hide methods
-hide stereotype
-
-' Tables
-table(Role) {
-    + role_id : int <<PK>>
+skinparam linetype ortho
+entity "User" as User {
+    email : string <<PK>>
     --
-    role_name : string 
-    description : string
+    first_name : string
+    last_name : string
+    password : string
 }
 
-table(User) {
-    + user_id : int <<PK>>
+entity "Customer" as Customer {
+    + email : int <<PK, FK>>
     --
-    name : string
-    email : string
-    password: string
-    role_id : int <<FK>>
+    address : address_id <<FK>>
 }
 
+entity "Artist" as Artist {
+    + email : int <<PK, FK>>
+    --
+    bio : string
+    style : string
+}
 
+entity "Product" as Product {
+    + product_id : int <<PK>>
+    --
+    title : string
+    price : decimal
+    currency : string
+    email : int <<FK>>
+}
 
-' Relationships
-Role ||--o{ User : has
+entity "Order" as Order {
+    + order_id : int <<PK>>
+    --
+    order_date : date
+    order_status : string
+    email : int <<FK>>
+}
+
+entity "OrderDetail" as OrderDetail {
+    + order_detail_id : int <<PK>>
+    --
+    order_id : int <<FK>>
+    product_id : int <<FK>>
+    quantity : int
+}
+
+entity "Address" as Address {
+    + address_id : int <<PK>>
+    --
+    customer_id : int <<FK>>
+    street : string
+    city : string
+    postal_code : string
+    country : string
+}
+
+' -------------------
+' RELATIONSHIPS
+' -------------------
+User ||--|| Customer : "is"
+User ||--|| Artist : "is"
+Customer ||--o{ Order : "places"
+Order ||--o{ OrderDetail : "contains"
+Product ||--o{ OrderDetail : "included in"
+Artist ||--o{ Product : "sells"
+Customer ||-up-o{ Address : "has"
 
 @enduml
