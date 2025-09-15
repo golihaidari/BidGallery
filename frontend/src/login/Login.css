@@ -1,9 +1,10 @@
 /* Fullscreen centered container */
+
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: auto;
   width: 150vh;
   background: linear-gradient(135deg, #89f7fe, #66a6ff);
   font-family: Arial, sans-serif;
