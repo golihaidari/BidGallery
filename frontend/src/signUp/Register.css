@@ -1,0 +1,13 @@
+.register-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px; /* vertical padding instead of centering */
+  background-color: linear-gradient(135deg, #89f7fe, #66a6ff);
+}
+
+.register-card {
+  width: 100%;
+  max-width: 450px;
+  padding: 20px;
+  box-sizing: border-box;
+}
