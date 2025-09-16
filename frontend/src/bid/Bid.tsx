@@ -1,33 +1,71 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import type { ProductItem } from "../interfaces/ProductItem";
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Bid.css";
+import { BidContext } from "../context/BidContext";
+import useFetch from "../hook/fetchData";
 
 const Bid: React.FC = () => {
-  const location = useLocation();
+  const bidContext = useContext(BidContext);
   const navigate = useNavigate();
-  const product: ProductItem = location.state?.product;
 
+  if(!bidContext) {
+      return <h1>"BidContext not available. wrap in BidProvider."</h1>;
+  }
+
+  const { bid, setBid} = bidContext;
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [error, setError] = useState("");
 
+  const { sendRequest, data, isLoading, error: fetchError } = useFetch<{
+    accepted : boolean;
+    bidSessionId?: string;
+    paymentClientSecret?: string;
+    message?: string;
+  }>("URL?");
+
+  const product = bid.product;
   if (!product) return <h1>No product selected</h1>;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (bidAmount > product.price) {
-      // Bid accepted, navigate to Payment page
-      navigate("/payment", { state: { product, bidAmount } });
-    } else {
-      setError(`Your bid is too LOW! Retry again.`);
-    }
+    
+    sendRequest(
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body : JSON.stringify({
+          productId: bid.product?.id,
+          amount: bidAmount,
+        }),
+      },
+      "Failed to submit bid"
+    );
   };
+
+  //React when data changes (success cases)
+  React.useEffect(() => {
+    if(data) {
+      if(!data.accepted) {
+        setError(data.message || "Your bid is too LOW! Retry again.");
+        return;
+      }
+
+      setBid({
+        ...bid,
+        bidAmount: bidAmount,
+        bidSession_id: data.bidSessionId,
+        paymentClientSecret: data.paymentClientSecret,
+      });
+
+      navigate("/payment");
+    }
+  },[data]);
 
   return (
     <div className="BidPage">
-      <h1>Place your bid for: {product.title}</h1>
-      <img src={product.image} alt={product.title} />
-      <p>Original price: {product.price.toFixed(2)} {product.currency}</p>
+      <h1>Place your bid for: {bid.product?.title}</h1>
+      <img src={bid.product?.image} alt={bid.product?.title} />
+      <p>Original price: {bid.product?.price.toFixed(2)} {bid.product?.currency}</p>
 
       <form onSubmit={handleSubmit}>
         <input
@@ -35,14 +73,17 @@ const Bid: React.FC = () => {
           placeholder="Enter your bid"
           value={bidAmount}
           onChange={(e) => setBidAmount(Number(e.target.value))}
-          min={product.price + 0.01}
+          min={bid.product!.price + 0.01}
           step="0.01"
           required
         />
-        <button type="submit">Submit Bid</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "..." :"Submit Bid"} 
+        </button>
       </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
+      {fetchError && <p style={{ color: "red" }}>{fetchError}</p>}
     </div>
   );
 };
