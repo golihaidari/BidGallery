@@ -15,8 +15,9 @@ function Login() {
       return;
     }
 
-    if (email === "test@example.com" && password === "1234") {
-      navigate("/main");
+    
+    if (email !== "a" && password !== "1") {
+      navigate("/products");
     } else {
       setError("Invalid email or password");
     }

@@ -1,0 +1,70 @@
+
+.BidPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+  font-family: 'Arial', sans-serif;
+  color: #333;
+  padding: 20px;
+}
+
+.BidPage h1 {
+  margin-bottom: 20px;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.BidPage img {
+  max-width: 300px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  margin-bottom: 20px;
+}
+
+.BidPage form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 20px 30px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.BidPage input[type="number"] {
+  padding: 10px 15px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 200px;
+}
+
+.BidPage button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  border: none;
+  background-color: #ff6b81;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.BidPage button:hover {
+  background-color: #ff4757;
+}
+
+.BidPage p {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.BidPage p[style] {
+  color: red;
+  font-size: 0.9rem;
+}
