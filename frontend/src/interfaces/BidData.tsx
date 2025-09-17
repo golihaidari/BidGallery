@@ -1,7 +1,7 @@
-import type { ProductItem } from "./ProductItem";
+import type { Product } from "./Product";
 
 export interface BidData{
-    product : ProductItem | null;
+    product : Product | null;
     bidAmount : number;
     bidSession_id?: string;
     paymentClientSecret?: string;    

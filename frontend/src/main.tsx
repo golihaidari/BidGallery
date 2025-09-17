@@ -5,7 +5,7 @@ import './index.css';
 import App from './App.tsx';
 import Login from './login/Login.tsx';
 import Register from './signUp/Register.tsx';
-import ProductList from './products/ProductList.tsx';
+import Products from './products/Products.tsx';
 import Bid from './bid/Bid.tsx';
 import Payment from './payment/Payment.tsx';
 import BidProvider from './context/BidContext.tsx';
@@ -17,7 +17,7 @@ createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/" element={<Login/>}/>
           <Route path="/register" element={<Register/>}/>
-          <Route path='/products' element={<ProductList/>}/>
+          <Route path='/products' element={<Products/>}/>
           <Route path='/giveBid' element={<Bid/>} />
           <Route path='/payment' element={<Payment/>}/>
           <Route path="/main" element={<App/>}/>

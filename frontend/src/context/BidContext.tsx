@@ -1,6 +1,6 @@
 import React, {useState } from 'react';
 import type {BidData} from '../interfaces/BidData';
-import type { ProductItem } from '../interfaces/ProductItem';
+import type { ProductItem } from '../interfaces/Product';
 
 export type BidContextType = {
     bid: BidData;

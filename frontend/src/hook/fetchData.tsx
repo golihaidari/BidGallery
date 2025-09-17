@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
 
 const useFetch =<T,>(url: string)=>{
@@ -11,15 +11,16 @@ const useFetch =<T,>(url: string)=>{
     function sendRequest(options?: RequestInit, errorMessage?: string){   
         setIsLoading(true);
         setError("");
-        fetch(url,options)
+        fetch(url,{ ...options, mode: "cors" }) // <- added mode: "cors"
                 .then((response) => {
                     setStatus(response.status)
-                    if (response.ok) {
-                        return response.json();                    
+                    if (!response.ok) {
+                        setIsLoading(false);
+                        setError(response.statusText)
+                        throw response.status                                           
                     }
-                    setIsLoading(false);
-                    setError(response.statusText)
-                    throw response.status
+
+                    return response.json();                     
                 })
                 .then(d =>{                    
                     setData(d);

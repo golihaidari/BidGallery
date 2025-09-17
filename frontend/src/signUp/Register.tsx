@@ -4,38 +4,27 @@ import {
   TextField,
   Button,
   MenuItem,
-  Card,
-  CardContent,
   Typography,
   Box,
+  Autocomplete,
 } from "@mui/material";
-import "./Register.css";
+import countries from "world-countries";
+import "./register.css"; 
+import type { User } from "../interfaces/User";
 
-type AccountType = "customer" | "artist";
-
-interface FormState {
-  firstName: string;
-  surname: string;
-  email: string;
-  password: string;
-  rePassword: string;
-  accountType: AccountType;
-  postalCode?: string;
-  city?: string;
-  address?: string;
-  bio?: string;
-  style?: string;
-}
+// Sorted country list
+const countryList = countries.map((c) => c.name.common).sort();
 
 export default function Register() {
   const navigate = useNavigate();
-  const [form, setForm] = useState<FormState>({
+  const [form, setForm] = useState<User>({
     firstName: "",
     surname: "",
     email: "",
     password: "",
     rePassword: "",
     accountType: "customer",
+    country: "Denmark",
     postalCode: "",
     city: "",
     address: "",
@@ -70,139 +59,158 @@ export default function Register() {
       return;
     }
 
-    console.log("Form data:", form); // send this to backend
+    console.log("Form data:", form); // send to backend
     navigate("/main");
   };
 
   return (
     <Box className="register-container">
-      <Card className="register-card">
-        <CardContent>
-          <Typography variant="h5" component="h2" gutterBottom>
-            Create Account
-          </Typography>
-          {error && <Typography color="error" gutterBottom>{error}</Typography>}
+      <Box className="register-box">
+        <Typography variant="h5" component="h2" gutterBottom>
+          Create Account
+        </Typography>
 
+        {error && (
+          <Typography color="error" gutterBottom>
+            {error}
+          </Typography>
+        )}
+
+        <Box className="register-grid">
+          {/* First Name - Surname */}
           <TextField
-            fullWidth
+            className="register-field"
             label="First Name"
             name="firstName"
             value={form.firstName}
             onChange={handleChange}
-            margin="normal"
           />
           <TextField
-            fullWidth
+            className="register-field"
             label="Surname"
             name="surname"
             value={form.surname}
             onChange={handleChange}
-            margin="normal"
           />
+
+          {/* Email full width */}
           <TextField
-            fullWidth
+            className="register-field register-full"
             label="Email"
             type="email"
             name="email"
             value={form.email}
             onChange={handleChange}
-            margin="normal"
           />
+
+          {/* Password - Re-enter Password */}
           <TextField
-            fullWidth
+            className="register-field"
             label="Password"
             type="password"
             name="password"
             value={form.password}
             onChange={handleChange}
-            margin="normal"
           />
           <TextField
-            fullWidth
+            className="register-field"
             label="Re-enter Password"
             type="password"
             name="rePassword"
             value={form.rePassword}
             onChange={handleChange}
-            margin="normal"
           />
 
+          {/* Account Type full width */}
           <TextField
             select
-            fullWidth
+            className="register-field register-full"
             label="Account Type"
             name="accountType"
             value={form.accountType}
             onChange={handleChange}
-            margin="normal"
           >
             <MenuItem value="customer">Customer</MenuItem>
             <MenuItem value="artist">Artist</MenuItem>
           </TextField>
 
+          {/* Customer fields */}
           {form.accountType === "customer" && (
             <>
+              {/* Country full width */}
+              <Box className="register-field register-full">
+                <Autocomplete
+                  options={countryList}
+                  value={form.country}
+                  onChange={(_, value) =>
+                    setForm((prev) => ({ ...prev, country: value || "" }))
+                  }
+                  renderInput={(params) => <TextField {...params} label="Country" />}
+                />
+              </Box>
+
+              {/* Postal Code - City */}
               <TextField
-                fullWidth
+                className="register-field"
                 label="Postal Code"
                 name="postalCode"
                 value={form.postalCode}
                 onChange={handleChange}
-                margin="normal"
               />
+
               <TextField
-                fullWidth
+                className="register-field"
                 label="City"
                 name="city"
                 value={form.city}
                 onChange={handleChange}
-                margin="normal"
-              />
+              />              
+
+              {/* Address full width */}
               <TextField
-                fullWidth
+                className="register-field register-full"
                 label="Address"
                 name="address"
                 value={form.address}
                 onChange={handleChange}
-                margin="normal"
               />
             </>
           )}
 
+          {/* Artist fields */}
           {form.accountType === "artist" && (
             <>
               <TextField
-                fullWidth
-                label="Bio"
-                name="bio"
-                value={form.bio}
-                onChange={handleChange}
-                margin="normal"
-                multiline
-                rows={3}
-              />
-              <TextField
-                fullWidth
+                className="register-field register-full"
                 label="Style"
                 name="style"
                 value={form.style}
                 onChange={handleChange}
-                margin="normal"
               />
+
+              <TextField
+                className="register-field register-full"
+                label="Bio"
+                name="bio"
+                multiline
+                rows={3}
+                value={form.bio}
+                onChange={handleChange}
+              />              
             </>
           )}
+        </Box>
 
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={handleSignUp}
-            style={{ marginTop: "16px" }}
-          >
-            Sign Up
-          </Button>
-        </CardContent>
-      </Card>
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{ mt: 2 }}
+          onClick={handleSignUp}
+        >
+          Sign Up
+        </Button>
+      </Box>
     </Box>
   );
 }

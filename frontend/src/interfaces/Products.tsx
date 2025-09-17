@@ -1,5 +1,5 @@
-import type { ProductItem } from "./ProductItem";
+import type { Product } from "./Product";
 
 export interface Products{
-    [key: string] : ProductItem;
+    [key: string] : Product;
 }
