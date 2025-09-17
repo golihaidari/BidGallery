@@ -1,10 +1,10 @@
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Box, TextField, Button, Typography } from "@mui/material";
 import "./Login.css";
 
 function Login() {
   const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,11 +15,10 @@ function Login() {
       return;
     }
 
-    
-    if (email !== "a" && password !== "1") {
-      navigate("/products");
-    } else {
+    if (email === "a" && password === "1") {
       setError("Invalid email or password");
+    } else {
+      navigate("/products");
     }
   };
 
@@ -28,37 +27,59 @@ function Login() {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-box">
-        <h1 className="title">Welcome Back</h1>
-        <p className="subtitle">Please log in to continue</p>
+    <Box className="login-container">
+      <Box className="login-box">
+        <Typography variant="h5" component="h1" gutterBottom>
+          Welcome Back
+        </Typography>
+        <Typography variant="body2" color="textSecondary" gutterBottom>
+          Please log in to continue
+        </Typography>
 
-        <input
-          type="email"
-          placeholder="Email"
+        <TextField
+          label="Email"
+          variant="outlined"
+          fullWidth
+          margin="normal"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="input"
         />
-
-        <input
+        <TextField
+          label="Password"
           type="password"
-          placeholder="Password"
+          variant="outlined"
+          fullWidth
+          margin="normal"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="input"
         />
 
-        {error && <p className="error">{error}</p>}
+        {error && (
+          <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+            {error}
+          </Typography>
+        )}
 
-        <button className="btn primary" onClick={handleLogin}>
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{ mt: 2 }}
+          onClick={handleLogin}
+        >
           Log in
-        </button>
-        <button className="btn secondary" onClick={handleRegister}>
+        </Button>
+        <Button
+          variant="outlined"
+          color="inherit"
+          fullWidth
+          sx={{ mt: 1 }}
+          onClick={handleRegister}
+        >
           Sign up
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Box>
+    </Box>
   );
 }
 

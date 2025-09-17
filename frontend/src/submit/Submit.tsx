@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
-import { Order } from "../interfaces/Order ";
-import { Address } from "../interfaces/Address";
-import navigate from "../Navigation/navigate";
-import { routes } from "../Navigation/RoutePaths";
-import usePostData from "../hooks/useFetch";
-import Beatloader from "../SpinnerAnimation/BeatLoader";
+import type { Address } from "../interfaces/Address";
+import usePostData from "../hook/fetchData";
+import Beatloader from "../beatloader/BeatLoader";
 import "./Submit.css";
 import React from "react";
-import { useCartState } from "../context/ShoppingContext";
+import { useNavigate } from "react-router-dom";
 
 const submitUrl = "https://eoysx40p399y9yl.m.pipedream.net";
 
@@ -26,10 +23,11 @@ function Submit({
     const { sendRequest, setError, status, isLoading, error } =
         usePostData<string>(submitUrl);
 
+    const navigate= useNavigate();
     useEffect(() => {
         if (status === 200) {
             resetAfterSubmit();
-            navigate(routes.finish.routePath);
+            navigate("/products");
         }
     }, [status]);
 

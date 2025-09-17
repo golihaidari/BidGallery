@@ -1,24 +1,26 @@
 import { useState } from "react";
+import { Box, Card } from "@mui/material";
 import PaymentOptions from "./Options";
 import CreditCardForm from "./forms/CreditCard";
-import MobilPayForm from "./forms/MobilePayForm";
+import MobilePayForm from "./forms/MobilePayForm";
 import GiftCardForm from "./forms/GiftCard";
 import { PaymentType } from "./PaymentType";
-import  "./Payment.css"
+import "./Payment.css";
 
 const Payment = () => {
+  const [paymentType, setPaymentType] = useState<string>(PaymentType.creditCard);
 
-    const[paymentType, setPaymentType]= useState<string>(PaymentType.creditCard);
+  return (
+    <Box className="payment-container">
+      <PaymentOptions paymentType={paymentType} setPaymentType={setPaymentType} />
 
-    return ( 
-        <div className="payment">
-            <PaymentOptions paymentType={paymentType} setPaymentType={setPaymentType}/>
+      <Card className="payment-card">
+        {paymentType === PaymentType.creditCard && <CreditCardForm />}
+        {paymentType === PaymentType.mobilePay && <MobilePayForm />}
+        {paymentType === PaymentType.giftCard && <GiftCardForm />}
+      </Card>
+    </Box>
+  );
+};
 
-            {paymentType === PaymentType.creditCard && <CreditCardForm/>}
-            {paymentType === PaymentType.mobilePay && <MobilPayForm/>}
-            {paymentType === PaymentType.giftCard && <GiftCardForm/>}
-        </div>
-     );
-}
- 
 export default Payment;

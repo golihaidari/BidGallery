@@ -1,166 +1,195 @@
-
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Box,
+  Button,
+  Paper,
+  TextField,
+  Typography,
+  InputAdornment,
+  MenuItem,
+} from "@mui/material";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
 import type { CreditCard } from "../../interfaces/CreditCard";
 import usePostData from "../../hook/fetchData";
+import BeatLoader from "../../beatloader/BeatLoader";
+import "./Form.css";
 
-const payment: CreditCard = {
-    cardNumber: "",
-    cvcNumber: "",
-    expiryMonth: "01",
-    expiryYear: "23",
+const initialPayment: CreditCard = {
+  cardHolder: "",
+  cardNumber: "",
+  cvcNumber: "",
+  expiryMonth: "01",
+  expiryYear: "25",
 };
 
-const submitUrl = "https://eoysx40p399y9yl.m.pipedream.net";
+const submitUrl = "https://eobr8yycab7ojzy.m.pipedream.net";
 
-function CreditCardForm() {
-    const [customerPayment, setCustomerPayment] = useState<CreditCard>(payment);
-    const {sendRequest, setError, status, isLoading, error} = usePostData<string>(submitUrl);
+const CreditCardForm = () => {
+  const [payment, setPayment] = useState<CreditCard>(initialPayment);
+  const { sendRequest, setError, status, isLoading, error } =
+    usePostData<string>(submitUrl);
+  const navigate = useNavigate();
 
-    useEffect(()=>{
-        if(status === 200){
-            //navigate(routes.submit.routePath);
-        }
-    },[status]) 
+  useEffect(() => {
+    if (status === 200) navigate("/products");
+  }, [status, navigate]);
 
-    const handleSubmit =async (event:React.FormEvent<HTMLFormElement>)=> {
-        event.preventDefault();
-        const options: RequestInit = {
-            method: "POST",
-            headers:{"Content-Type": "application/json"},
-            mode: "cors",
-            body: JSON.stringify(customerPayment),
-        };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPayment({ ...payment, [e.target.name]: e.target.value });
+  };
 
-        sendRequest(options, "Vi beklager ulejligheden, noget gik galt ved indsendelsen af din betaling med kort!");
-    } 
-
-    const onChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-        setCustomerPayment({
-            ...customerPayment,
-            [event.target.name]: event.target.value,
-        });
-    };
-
-    const onSelect = (event: React.ChangeEvent<HTMLSelectElement>): void => {
-        setCustomerPayment({
-            ...customerPayment,
-            [event.target.name]: event.target.value,
-        });
-    };
-
-    return (
-        <div className="payment-block">
-            {error === "" ? (
-                <form onSubmit={handleSubmit}>
-                    <div className="payment">
-                        <h2 className="fullrow">Kort oplysninger</h2>
-                        <label className="paymentblock" htmlFor="expiryMonth">
-                            Udløbsmåned
-                        </label>{" "}
-                        <label className="paymentblock" htmlFor="expiryYear">
-                            Udløbsår
-                        </label>
-                        <div className="paymentblock">
-                            <select
-                                autoFocus
-                                required
-                                className="dropdownpayment"
-                                id="expiryMonth"
-                                name="expiryMonth"
-                                onChange={onSelect}
-                            >
-                                <option> 01 </option>
-                                <option> 02 </option>
-                                <option> 03 </option>
-                                <option> 04 </option>
-                                <option> 05 </option>
-                                <option> 06 </option>
-                                <option> 07 </option>
-                                <option> 08 </option>
-                                <option> 09 </option>
-                                <option> 10 </option>
-                                <option> 11 </option>
-                                <option> 12 </option>
-                            </select>
-                        </div>
-                        <div className="paymentblock">
-                            <select
-                                required
-                                className="dropdownpayment"
-                                id="expiryYear"
-                                name="expiryYear"
-                                onSelect={onSelect}
-                            >
-                                <option> 23 </option>
-                                <option> 24 </option>
-                                <option> 25 </option>
-                                <option> 26 </option>
-                                <option> 27 </option>
-                                <option> 28 </option>
-                                <option> 29 </option>
-                                <option> 30 </option>
-                                <option> 31 </option>
-                                <option> 32 </option>
-                                <option> 33 </option>
-                                <option> 34 </option>
-                                <option> 35 </option>
-                            </select>
-                        </div>
-                        <label className="paymentblock" htmlFor="cardNumber">
-                            Kortnummer
-                        </label>
-                        <label className="paymentblock" htmlFor="cvcNumber">
-                            {" "}
-                            CVC
-                        </label>
-                        <div className="paymentblock">
-                            <input
-                                required
-                                type="text"
-                                name="cardNumber"
-                                id="cardNumber"
-                                minLength={15} //American Express
-                                maxLength={16} //Others
-                                onChange={onChange}
-                            />
-                        </div>
-                        <div className="paymentblock">
-                            <input
-                                className="cvcfield"
-                                required
-                                pattern="[0-9]{3}"
-                                type="text"
-                                maxLength={3}
-                                id="cvcNumber"
-                                name="cvcNumber"
-                                onChange={onChange}
-                            />
-                        </div>
-                        <div className="fullrow">
-                            {!isLoading ? (
-                                <button
-                                    className="confirm_payment"
-                                    disabled={isLoading}
-                                    type="submit"
-                                >
-                                    Bekræft Betaling
-                                </button>
-                            ) : (
-                                <p className="loading">Loading...</p>
-                            )}
-                        </div>
-                    </div>
-                </form>
-            ) : (
-                <div>
-                    <p className="error-text">{error}</p>
-                    <button className="confirm_payment" onClick={()=>setError("")}>
-                        Prøv igen
-                    </button>
-                </div>
-            )}
-        </div>
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendRequest(
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "creditcard", ...payment }),
+      },
+      "Error submitting credit card"
     );
-}
+  };
+
+  return (
+    <Paper
+      elevation={3}
+      className="payment-form"
+      sx={{ p: 4, maxWidth: 460, mx: "auto", borderRadius: 3 }}
+    >
+      <Typography variant="h6" sx={{ mb: 3 }}>
+        Payment Details
+      </Typography>
+
+      {error ? (
+        <Box textAlign="center">
+          <Typography color="error" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+          <Button variant="contained" onClick={() => setError("")}>
+            Try Again
+          </Button>
+        </Box>
+      ) : (
+        <Box component="form" onSubmit={handleSubmit} noValidate>
+          {/* Cardholder Name */}
+          <TextField
+            fullWidth
+            label="Cardholder Name"
+            name="cardHolder"
+            margin="normal"
+            value={payment.cardHolder}
+            onChange={handleChange}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PersonOutlineIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          {/* Card Number */}
+          <TextField
+            fullWidth
+            label="Card Number"
+            name="cardNumber"
+            margin="normal"
+            value={payment.cardNumber}
+            onChange={handleChange}
+            inputProps={{ maxLength: 16 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <CreditCardIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          {/* Expiration + CVV */}
+          <Box sx={{display: "flex", gap: 15}}>          
+            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+              <TextField
+                select
+                sx={{ width: 100 }}
+                label="Expiry Month"
+                name="expiryMonth"
+                value={payment.expiryMonth}
+                onChange={handleChange}
+              >
+                <MenuItem value="" disabled>
+                  MM
+                </MenuItem>
+                <MenuItem value="01">01</MenuItem>
+                <MenuItem value="02">02</MenuItem>
+                <MenuItem value="03">03</MenuItem>
+                <MenuItem value="04">04</MenuItem>
+                <MenuItem value="05">05</MenuItem>
+                <MenuItem value="06">06</MenuItem>
+                <MenuItem value="07">07</MenuItem>
+                <MenuItem value="08">08</MenuItem>
+                <MenuItem value="09">09</MenuItem>
+                <MenuItem value="10">10</MenuItem>
+                <MenuItem value="11">11</MenuItem>
+                <MenuItem value="12">12</MenuItem>
+              </TextField>
+
+              <TextField
+                select
+                sx={{ width: 100 }}
+                label="Expiry Year"
+                name="expiryYear"
+                value={payment.expiryYear}
+                onChange={handleChange}
+              >
+                <MenuItem value="" disabled>
+                  YY
+                </MenuItem> 
+                <MenuItem value="25">25</MenuItem>
+                <MenuItem value="26">26</MenuItem>
+                <MenuItem value="27">27</MenuItem>
+                <MenuItem value="28">28</MenuItem>
+                <MenuItem value="29">29</MenuItem>
+                <MenuItem value="30">30</MenuItem>
+                <MenuItem value="31">31</MenuItem>
+                <MenuItem value="32">32</MenuItem>
+                <MenuItem value="33">33</MenuItem>
+                <MenuItem value="34">34</MenuItem>
+                <MenuItem value="35">35</MenuItem>
+              </TextField>           
+            </Box>
+
+            <TextField
+              sx={{ width: 100 }}
+              label="CVC"
+              placeholder="123"
+              name="cvcNumber"
+              margin="normal"
+              value={payment.cvcNumber}
+              onChange={handleChange}
+              inputProps={{
+                maxLength: 3,
+                pattern: "\\d{3}", // Accepts 3 digits only
+                title: "CVV must be 3 digits",
+              }}
+            />
+          </Box>
+
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, borderRadius: 5 }}
+            disabled={isLoading}
+          >
+            {isLoading ? <BeatLoader /> : "Confirm"}
+          </Button>
+        </Box>
+      )}
+    </Paper>
+  );
+};
 
 export default CreditCardForm;

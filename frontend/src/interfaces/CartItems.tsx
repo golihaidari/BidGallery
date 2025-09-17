@@ -1,7 +1,7 @@
-import type { ProductItem } from "./ProductItem";
+import type { Product } from "./Product";
 
-export interface CartItem {
-    product: ProductItem;
+export interface Cart {
+    product: Product;
     quantity: number;
     giftWrap: boolean;
     recurringOrder: boolean;

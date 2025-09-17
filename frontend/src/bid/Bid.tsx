@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { Box, Typography, TextField, Button, Card, CardContent } from "@mui/material";
 import "./Bid.css";
 import { BidContext } from "../context/BidContext";
 import useFetch from "../hook/fetchData";
@@ -8,32 +9,34 @@ const Bid: React.FC = () => {
   const bidContext = useContext(BidContext);
   const navigate = useNavigate();
 
-  if(!bidContext) {
-      return <h1>"BidContext not available. wrap in BidProvider."</h1>;
+  if (!bidContext) {
+    return <h1>BidContext not available. Wrap in BidProvider.</h1>;
   }
 
-  const { bid, setBid} = bidContext;
+  const { bid, setBid } = bidContext;
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [error, setError] = useState("");
 
+  const submitUrl = "https://eoh1vexlplfjoih.m.pipedream.net";
   const { sendRequest, data, isLoading, error: fetchError } = useFetch<{
-    accepted : boolean;
+    accepted: boolean;
     bidSessionId?: string;
     paymentClientSecret?: string;
     message?: string;
-  }>("URL?");
+  }>(submitUrl);
 
   const product = bid.product;
   if (!product) return <h1>No product selected</h1>;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     sendRequest(
       {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body : JSON.stringify({
+        headers: { "Content-Type": "application/json" },
+        mode: "cors",
+        body: JSON.stringify({
           productId: bid.product?.id,
           amount: bidAmount,
         }),
@@ -42,10 +45,9 @@ const Bid: React.FC = () => {
     );
   };
 
-  //React when data changes (success cases)
   React.useEffect(() => {
-    if(data) {
-      if(!data.accepted) {
+    if (data) {
+      if (!data.accepted) {
         setError(data.message || "Your bid is too LOW! Retry again.");
         return;
       }
@@ -59,32 +61,50 @@ const Bid: React.FC = () => {
 
       navigate("/payment");
     }
-  },[data]);
+  }, [data]);
 
   return (
-    <div className="BidPage">
-      <h1>Place your bid for: {bid.product?.title}</h1>
-      <img src={bid.product?.image} alt={bid.product?.title} />
-      <p>Original price: {bid.product?.price.toFixed(2)} {bid.product?.currency}</p>
+    <Box className="bid-container">
+      <Card className="bid-card">
+        <CardContent>
+          <Typography variant="h5" gutterBottom>
+            Place your bid for: {product.title}
+          </Typography>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="number"
-          placeholder="Enter your bid"
-          value={bidAmount}
-          onChange={(e) => setBidAmount(Number(e.target.value))}
-          min={bid.product!.price + 0.01}
-          step="0.01"
-          required
-        />
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? "..." :"Submit Bid"} 
-        </button>
-      </form>
+          <Box className="bid-image-container">
+            <img src={product.image} alt={product.title} />
+          </Box>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {fetchError && <p style={{ color: "red" }}>{fetchError}</p>}
-    </div>
+          <Typography variant="body1" gutterBottom>
+            Original price: {product.price.toFixed(2)} {product.currency}
+          </Typography>
+
+          <form className="bid-form" onSubmit={handleSubmit}>
+            <TextField
+              label="Enter your bid"
+              type="number"
+              value={bidAmount}
+              onChange={(e) => setBidAmount(Number(e.target.value))}
+              fullWidth
+              required
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              sx={{ mt: 2 }}
+              disabled={isLoading}
+            >
+              {isLoading ? "Submitting..." : "Submit Bid"}
+            </Button>
+          </form>
+
+          {error && <Typography color="error" sx={{ mt: 1 }}>{error}</Typography>}
+          {fetchError && <Typography color="error" sx={{ mt: 1 }}>{fetchError}</Typography>}
+        </CardContent>
+      </Card>
+    </Box>
   );
 };
 

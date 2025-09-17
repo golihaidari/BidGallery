@@ -1,0 +1,14 @@
+.payment-form .MuiOutlinedInput-root {
+  border-radius: 10px;
+}
+
+.payment-form .MuiButton-contained {
+  background-color: #7367f0;   /* violet */
+  text-transform: none;
+  font-weight: 600;
+}
+
+.payment-form .MuiButton-contained:hover {
+  background-color: #5b4ed6;
+}
+

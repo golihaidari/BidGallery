@@ -1,88 +1,16 @@
-/* Fullscreen centered container */
-
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: auto;
-  width: 150vh;
-  background: linear-gradient(135deg, #89f7fe, #66a6ff);
-  font-family: Arial, sans-serif;
+  height: 100vh;
 }
 
-/* Card-like box */
 .login-box {
-  background: white;
-  padding: 40px;
+  width: 360px;
+  padding: 32px;
   border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid #ddd; /* subtle border */
+  background-color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   text-align: center;
-  width: 320px;
-}
-
-/* Title & subtitle */
-.title {
-  margin-bottom: 10px;
-  font-size: 24px;
-  color: #333;
-}
-
-.subtitle {
-  margin-bottom: 20px;
-  color: #666;
-  font-size: 14px;
-}
-
-/* Input fields */
-.input {
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 10px;
-  margin-bottom: 15px;
-  width: 100%;
-  font-size: 14px;
-  transition: border 0.3s ease;
-}
-
-.input:focus {
-  border-color: #66a6ff;
-  outline: none;
-  box-shadow: 0 0 5px rgba(102, 166, 255, 0.5);
-}
-
-/* Buttons */
-.btn {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.btn.primary {
-  background-color: #66a6ff;
-  color: white;
-}
-
-.btn.primary:hover {
-  background-color: #4b8de5;
-}
-
-.btn.secondary {
-  background-color: #f0f0f0;
-  color: #333;
-}
-
-.btn.secondary:hover {
-  background-color: #e0e0e0;
-}
-
-/* Error message */
-.error {
-  color: red;
-  margin-bottom: 15px;
-  font-size: 14px;
 }
