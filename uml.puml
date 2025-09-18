@@ -2,9 +2,7 @@
 skinparam linetype ortho
 entity "User" as User {
     id : string <<PK>>
-    --
-    first_name : string
-    last_name : string
+    --    
     email : string
     password : string
 }
@@ -32,7 +30,7 @@ entity "Order" as Order {
     --
     order_date : date
     order_status : string
-    customer_id : int <<FK>>
+    user_id : int <<FK>>
     product_id : int <<FK>>
     address_id : int <<FK>>
     total_price : decimal
@@ -41,7 +39,9 @@ entity "Order" as Order {
 entity "Address" as Address {
     + id : int <<PK>>
     --
-    street : string
+    first_name : string
+    last_name : string
+    adress : string
     city : string
     postal_code : string
     country : string
@@ -55,6 +55,6 @@ User }o--o{ Order : "has"
 Artist ||-right-|| User : "is"
 Order }o--o{ Product : "contains"
 Artist ||-down-o{ Product : "creates"
-User ||-right-o{ Address : "has"
+User ||-right-o{ Address : "has" 
 
 @enduml
