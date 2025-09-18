@@ -2,18 +2,19 @@ import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography, TextField, Button, Card, CardContent } from "@mui/material";
 import "./Bid.css";
-import { BidContext } from "../context/BidContext";
 import useFetch from "../hook/fetchData";
+import { CheckoutContext } from "../context/CheckoutContext";
 
 const Bid: React.FC = () => {
-  const bidContext = useContext(BidContext);
+  const checkoutContext = useContext(CheckoutContext);
+  //const bidContext = useContext(BidContext);
   const navigate = useNavigate();
 
-  if (!bidContext) {
-    return <h1>BidContext not available. Wrap in BidProvider.</h1>;
+  if (!checkoutContext) {
+    return <h1>checkoutContext not available. Wrap in CheckoutProvider.</h1>;
   }
 
-  const { bid, setBid } = bidContext;
+  const { checkout, setCheckout } = checkoutContext;
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [error, setError] = useState("");
 
@@ -25,7 +26,7 @@ const Bid: React.FC = () => {
     message?: string;
   }>(submitUrl);
 
-  const product = bid.product;
+  const product = checkout.product;
   if (!product) return <h1>No product selected</h1>;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,8 +38,8 @@ const Bid: React.FC = () => {
         headers: { "Content-Type": "application/json" },
         mode: "cors",
         body: JSON.stringify({
-          productId: bid.product?.id,
-          amount: bidAmount,
+          productId: checkout.product?.id,
+          amount: bidAmount,          
         }),
       },
       "Failed to submit bid"
@@ -52,11 +53,10 @@ const Bid: React.FC = () => {
         return;
       }
 
-      setBid({
-        ...bid,
-        bidAmount: bidAmount,
-        bidSession_id: data.bidSessionId,
-        paymentClientSecret: data.paymentClientSecret,
+
+      setCheckout({
+        ... checkout,
+        bidPrice: bidAmount,
       });
 
       navigate("/payment");

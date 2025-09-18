@@ -16,6 +16,7 @@ import RoundLoader from "../roundLoader/RoundLoader";
 import { useNavigate } from "react-router-dom";
 import { BidContext } from "../context/BidContext";
 import "./Products.css";
+import { CheckoutContext } from "../context/CheckoutContext";
 
 const dataUrl =
   "https://gist.githubusercontent.com/golihaidari/e6cc18a1af1eb0989a98d1ed8a128421/raw/24667d536f5663cc4257f2e5a7941e05845f5c80/arts-dataset.json";
@@ -25,7 +26,7 @@ const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
-  const bidContext = useContext(BidContext);
+  const checkoutContext = useContext(CheckoutContext);
 
   useEffect(() => {
     sendRequest();
@@ -37,13 +38,12 @@ const Products = () => {
 
   const handleBid = (e: React.FormEvent, product: Product) => {
     e.preventDefault();
-    if (!bidContext) return;
+    if (!checkoutContext) return;
 
-    bidContext.setBid({
+    checkoutContext.setCheckout({
       product,
-      bidAmount: 0,
-      bidSession_id: undefined,
-      paymentClientSecret: undefined,
+      bidPrice: 0,
+      address: null,
     });
 
     navigate("/giveBid");
