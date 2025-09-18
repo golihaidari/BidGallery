@@ -8,11 +8,11 @@ import Register from './signUp/Register.tsx';
 import Products from './products/Products.tsx';
 import Bid from './bid/Bid.tsx';
 import Payment from './payment/Payment.tsx';
-import BidProvider from './context/BidContext.tsx';
+import CheckoutProvider from './context/CheckoutContext.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BidProvider>
+    <CheckoutProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Login/>}/>
@@ -23,6 +23,6 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/main" element={<App/>}/>
         </Routes>
       </BrowserRouter> 
-    </BidProvider>
+    </CheckoutProvider>
   </StrictMode>,
 );
