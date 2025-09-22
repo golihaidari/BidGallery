@@ -12,23 +12,26 @@ import { ThemeProvider } from "@mui/material/styles";
 import theme from "./Theme.tsx";
 import ShippingAddress from '@components/delivery/ShippingAddress.tsx';
 import Submit from '@components/submit/Submit.tsx';
+import { AuthProvider } from '@context/AuthContext.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}> 
-      <CheckoutProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path='/' element={<Products/>}/>
-            <Route path="/login" element={<Login/>}/>
-            <Route path="/register" element={<Register/>}/>          
-            <Route path='/giveBid' element={<Bid/>} />
-            <Route path='/delivery' element={<ShippingAddress/>}/>
-            <Route path='/payment' element={<Payment/>}/>
-            <Route path='/submit' element={<Submit/>}/>            
-          </Routes>
-        </BrowserRouter> 
-      </CheckoutProvider>
+      <AuthProvider>
+        <CheckoutProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path='/' element={<Products/>}/>
+              <Route path="/login" element={<Login/>}/>
+              <Route path="/register" element={<Register/>}/>          
+              <Route path='/giveBid' element={<Bid/>} />
+              <Route path='/delivery' element={<ShippingAddress/>}/>
+              <Route path='/payment' element={<Payment/>}/>
+              <Route path='/submit' element={<Submit/>}/>            
+            </Routes>
+          </BrowserRouter> 
+        </CheckoutProvider>
+      </AuthProvider>
     </ThemeProvider>
   </StrictMode>,
 );
