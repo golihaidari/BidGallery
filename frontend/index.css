@@ -1,0 +1,130 @@
+/* Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap");
+
+/* Global pastel variables */
+:root {
+    --page-bg: #FFF3E8;           /* Page background */
+    --card-bg: #EAE8FF;           /* Cards / Paper */
+    --text-primary: #1A1F36;      /* Main text / headings */
+    --text-secondary: #6B5FA5;    /* Links / secondary text */
+    --button-primary: #FF6F61;    /* Primary buttons */
+    --button-secondary: #4ED2C2;  /* Secondary buttons / accents */
+    --button-text: #FFFFFF;        /* Button text */
+    --accent: #FFD97D;            /* Highlights / hover */
+}
+
+/* Body */
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: linear-gradient(135deg, #FFF3E8, #EAE8FF);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Headings */
+h1,h2,h3,h4,h5,h6 {
+    color: var(--text-primary);
+    margin: 0.5em 0;
+}
+
+/* Paragraphs */
+p {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin: 0.5em 0;
+}
+
+/* Links */
+a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: var(--accent);
+}
+
+/* Buttons */
+button {
+    border-radius: 8px;
+    border: none;
+    padding: 0.6em 1.2em;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--button-text);
+    background: linear-gradient(90deg, var(--button-primary), var(--accent));
+    transition: all 0.3s ease;
+}
+
+button.secondary {
+    background: linear-gradient(90deg, var(--button-secondary), var(--accent));
+}
+
+button:hover {
+    opacity: 0.85;
+    font-weight: bold;
+}
+
+
+
+/* Forms */
+input, .MuiOutlinedInput-root {
+    border-radius: 10px;
+}
+
+
+
+/* Grid */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em;
+}
+
+.col {
+    flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container { padding: 1em; }
+    p { font-size: 0.95rem; }
+    h1 { font-size: 2rem; }
+}
+
+@media (max-width: 480px) {
+    .row { flex-direction: column; }
+}
+
+/* Loader */
+.loader-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(255,243,232,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loader {
+    border: 6px solid #EAE8FF;
+    border-top: 6px solid #FF6F61;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

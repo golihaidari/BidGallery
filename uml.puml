@@ -1,21 +1,28 @@
 @startuml
 skinparam linetype ortho
+
+' -------------------
+' ENTITIES
+' -------------------
 entity "User" as User {
-    id : string <<PK>>
-    --    
+    + user_id : int <<PK>>
+    --
     email : string
     password : string
+    account_type : string
 }
 
 entity "Artist" as Artist {
-    + user-id : int <<PK, FK>>
+    + user_id : int <<PK, FK>>
     --
+    first_name : string
+    last_name : string
     bio : string
     style : string
 }
 
 entity "Product" as Product {
-    + id : int <<PK>>
+    + product_id : int <<PK>>
     --
     title : string
     secret_price : decimal
@@ -25,36 +32,41 @@ entity "Product" as Product {
     artist_id : int <<FK>>
 }
 
-entity "Order" as Order {
-    + id : int <<PK>>
-    --
-    order_date : date
-    order_status : string
-    user_id : int <<FK>>
-    product_id : int <<FK>>
-    address_id : int <<FK>>
-    total_price : decimal
-}
-
 entity "Address" as Address {
-    + id : int <<PK>>
+    + address_id : int <<PK>>
     --
     first_name : string
     last_name : string
-    adress : string
-    city : string
-    postal_code : string
+    email : string
+    mobile_nr : string
     country : string
-    user_id : string <<FK>>
+    postal_code : string
+    city : string
+    address1 : string
+    address2 : string
+    user_id : int <<FK, nullable>>
+}
+
+entity "Order" as Order {
+    + order_id : int <<PK>>
+    --
+    order_date : date
+    order_status : string
+    user_id : int <<FK, nullable>>
+    product_id : int <<FK>>
+    address_id : int <<FK>>
+    price : decimal
 }
 
 ' -------------------
 ' RELATIONSHIPS
 ' -------------------
-User }o--o{ Order : "has"
-Artist ||-right-|| User : "is"
-Order }o--o{ Product : "contains"
-Artist ||-down-o{ Product : "creates"
-User ||-right-o{ Address : "has" 
+Artist-right-|| User : "is" 
+User --o{ Order : "places"
+Product }o--|| Artist : "creates"
+Order }o--|| Product : "contains"
+Order }o--|| Address : "ship to"
+User --o{ Address : "has"
 
 @enduml
+
