@@ -1,28 +1,28 @@
-import React, { useState} from "react";
+// context/CheckoutContext.tsx
+import React, { createContext, useReducer } from "react";
 import type { CheckoutData } from "../interfaces/CheckoutData";
+import { checkoutReducer, initialCheckoutState } from "./checkoutReducer";
 
-
-export type CheckoutContextType = {
-    checkout: CheckoutData;
-    setCheckout: (data:CheckoutData) => void;
+type CheckoutContextType = {
+  state: CheckoutData;
+  dispatch: React.Dispatch<any>;
 };
 
-export const CheckoutContext = React.createContext<CheckoutContextType| null>(null);
-interface Props {
-    children: React.ReactNode;
-}
+export const CheckoutContext = createContext<CheckoutContextType | null>(null);
 
-const CheckoutProvider : React.FC<Props> = ({children}): any => {
-    const[checkout, setCheckout] = useState<CheckoutData>({
-        product : null,
-        bidPrice : 0,
-        address : null,
-    });
-    return (
-        <CheckoutContext.Provider value={{checkout, setCheckout}}>
-            {children}
-        </CheckoutContext.Provider>
-    ) 
-}
+export const CheckoutProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [state, dispatch] = useReducer(checkoutReducer, initialCheckoutState);
 
+  return (
+    <CheckoutContext.Provider value={{ state, dispatch }}>
+      {children}
+    </CheckoutContext.Provider>
+  );
+};
 export default CheckoutProvider;
+
+export const useCheckout = () => {
+  const context = React.useContext(CheckoutContext);
+  if (!context) throw new Error("useCheckout must be used within a CheckoutProvider");
+  return context;
+};

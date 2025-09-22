@@ -1,0 +1,32 @@
+.submit-page {
+  background: linear-gradient(to bottom right, #f0f4f8, #ffffff);
+  min-height: 100vh;
+  padding-top: 2rem;
+}
+
+.submit-page .MuiCard-root {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.submit-page .MuiCard-root:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.submit-page .MuiTypography-h5 {
+  font-weight: 600;
+}
+
+.submit-page .MuiButton-root {
+  font-weight: 600;
+  text-transform: none;
+}
+
+.submit-page .MuiDivider-root {
+  border-color: #d0d7de;
+  margin-bottom: 1rem;
+}
+
+.submit-page .MuiTypography-body1 {
+  color: #333333;
+}

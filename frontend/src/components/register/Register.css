@@ -1,0 +1,26 @@
+.register-box {
+  max-width: 600px;
+  margin: 48px auto;       /* mt:6, mb:6 */
+  padding: 32px;           /* p:4 */
+  border-radius: 24px;     /* borderRadius:3 */
+  background-color: #FFF; /* same cream background */
+  text-align: center;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+}
+
+.register-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* mobile default */
+  gap: 16px; /* spacing between fields */
+}
+
+@media (min-width: 600px) {
+  .register-grid {
+    grid-template-columns: 1fr 1fr; /* 2 columns for tablet+ */
+  }
+}
+
+/* Make optional address line span both columns */
+.register-grid .full-width {
+  grid-column: 1 / -1;
+}
