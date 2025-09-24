@@ -1,41 +1,50 @@
 import { useState, useEffect } from "react";
-import { Box, Button, Paper, Typography, FormControlLabel, Checkbox } from "@mui/material";
+import { Box, FormControlLabel, Checkbox, Typography } from "@mui/material";
 import PhoneInput from "react-phone-input-2";
 import 'react-phone-input-2/lib/style.css';
 import { useNavigate } from "react-router-dom";
-import BeatLoader from "@utils/beatloader/BeatLoader";
 import usePostData from "@hook/fetchData";
-
 import mobilepayImg from "@assets/mobilepayicon.svg";
 import type { MobilePay } from "@interfaces/MobilePay";
-import "@components/payment/Payment.css"
 import { createMockPaymentIntent } from "@utils/createMockPaymentIntent";
 import { useCheckout } from "@context/CheckoutContext";
+import FormTemplate from "@utils/FormTemplate";
+import PaymentFormValidator from "@utils/PaymentFormValidator";
+import "../Payment.css"
 
 const submitUrl = "https://eobr8yycab7ojzy.m.pipedream.net";
 
 const MobilePayForm = () => {
-  const [form, setForm] = useState<MobilePay>({ mobilePayNumber: "", countryCode: "+45", check: false });
-  const { sendRequest, setError, status, isLoading, error } = usePostData<string>(submitUrl);
+  const [form, setForm] = useState<MobilePay>({
+    mobilePayNumber: "",
+    countryCode: "+45",
+    check: false,
+  });
+  const [fieldError, setFieldError] = useState("");
+  const { sendRequest, setError, status, isLoading, error: apiError } = usePostData<string>(submitUrl);
   const navigate = useNavigate();
-  const {dispatch}= useCheckout();
+  const { dispatch } = useCheckout();
 
   useEffect(() => {
-    if (status === 200){
+    if (status === 200) {
       const { paymentIntentId } = createMockPaymentIntent();
-          
-      dispatch({type: "SET_PAYMENT_INTENT", paymentIntentId,});
+      dispatch({ type: "SET_PAYMENT_INTENT", paymentIntentId });
       navigate("/submit");
-    } 
+    }
   }, [status, navigate, dispatch]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Validate on blur
+  const onBlur = () => {
+    const errs = PaymentFormValidator.validateMobilePay({ phoneNumber: form.mobilePayNumber });
+    setFieldError(errs.phoneNumber);
+  };
 
-    navigate("/submit"); 
-
-    // Basic validation: must have a number
-    if (!form.mobilePayNumber) return;
+  const handleSubmit = () => {
+    const errs = PaymentFormValidator.validateMobilePay({ phoneNumber: form.mobilePayNumber });
+    if (errs.phoneNumber) {
+      setFieldError(errs.phoneNumber);
+      return; // stop submit if invalid
+    }
 
     sendRequest(
       {
@@ -46,54 +55,50 @@ const MobilePayForm = () => {
       "Error submitting MobilePay"
     );
   };
-  
 
   return (
-    <Paper elevation={3}
-     className="payment-form"
+    <FormTemplate
+      title="Pay via MobilePay"
+      onSubmit={handleSubmit}
+      loading={isLoading}
+      error={apiError}
+      retry={() => setError("")}
+      submitLabel="Confirm Payment"
     >
-      <Typography variant="h6" sx={{textAlign: "center", mb: 3, fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' }}}>Betal via MobilePay</Typography>
-
       <Box textAlign="center" sx={{ mb: 3 }}>
         <img src={mobilepayImg} alt="MobilePay" className="mobilepay-Img" />
       </Box>
 
-      {error ? (
-        <Box textAlign="center">
-          <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
-          <Button variant="contained" onClick={() => setError("")}>Prøv igen</Button>
-        </Box>
-      ) : (
-        <Box component="form" onSubmit={handleSubmit} noValidate>
-          {/* Phone input */}
-          <PhoneInput
-            country={"dk"}
-            value={form.mobilePayNumber}
-            onChange={(phone, countryData) => {
-              const data = countryData as { dialCode: string };
-              setForm({
-              mobilePayNumber: phone,
-              countryCode: `+${data.dialCode}`,
-              check: form.check,
-            })}}
-            inputStyle={{ width: "100%" }}
-            containerStyle={{ marginBottom: "16px" }}
-            inputProps={{ name: "mobilePayNumber", required: true }}
-          />
+      <PhoneInput
+        country={"dk"}
+        value={form.mobilePayNumber}
+        onChange={(phone, countryData) => {
+          const data = countryData as { dialCode: string };
+          setForm({ ...form, mobilePayNumber: phone, countryCode: `+${data.dialCode}` });
+        }}
+        onBlur={onBlur}
+        inputStyle={{ width: "100%" }}
+        containerStyle={{ marginBottom: "16px" }}
+        inputProps={{ name: "mobilePayNumber", required: true }}
+      />
 
-          {/* Checkbox */}
-          <FormControlLabel
-            control={<Checkbox checked={form.check} onChange={() => setForm({ ...form, check: !form.check })} />}
-            label="Husk mig til næste gang"
-            sx={{ mb: 2 }}
-          />
-
-          <Button type="submit" fullWidth variant="contained" sx={{ borderRadius: 5 }} disabled={isLoading}>
-            {isLoading ? <BeatLoader /> : "Bekræft Betaling"}
-          </Button>
-        </Box>
+      {fieldError && (
+        <Typography color="error" variant="body2" sx={{ mb: 1 }}>
+          {fieldError}
+        </Typography>
       )}
-    </Paper>
+
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={form.check}
+            onChange={() => setForm({ ...form, check: !form.check })}
+          />
+        }
+        label="Remember me next time"
+        sx={{ mb: 2 }}
+      />
+    </FormTemplate>
   );
 };
 

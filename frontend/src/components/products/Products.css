@@ -1,7 +1,7 @@
 /* General page background */
 .products-page {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--page-bg);
 }
 
 /* Top toolbar */
@@ -15,23 +15,28 @@
 
 .products-toolbar .search-field {
   width: 40%; /* default desktop width */
+  background-color: var(--input-bg);
+  border-radius: var(--border-radius);
   transition: box-shadow 0.3s, transform 0.3s;
 }
 
 .products-toolbar .search-field:hover,
-.products-toolbar .search-field:focus {
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+.products-toolbar .search-field:focus-within {
+  box-shadow: var(--card-shadow);
   transform: scale(1.02);
 }
 
-/* Top Login button */
+/* Top Login/Logout button */
 .products-toolbar button {
+  background-color: var(--button-primary);
+  color: var(--button-text);
+  border-radius: var(--border-radius);
   transition: transform 0.2s, background-color 0.2s;
   cursor: pointer;
 }
 
 .products-toolbar button:hover {
-  background-color: #115293;
+  background-color: var(--button-secondary);
   transform: scale(1.05);
 }
 
@@ -63,10 +68,14 @@
 .product-card {
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s, box-shadow 0.3s;
   width: 30%; /* desktop */
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
 }
+
 
 .product-card:hover {
   transform: scale(1.05);
@@ -77,6 +86,8 @@
 .product-card img {
   height: 200px;
   object-fit: cover;
+  border-top-left-radius: var(--border-radius);
+  border-top-right-radius: var(--border-radius);
   transition: transform 0.3s;
 }
 
@@ -87,6 +98,12 @@
 /* Card content */
 .product-card .MuiCardContent-root {
   flex-grow: 1;
+  color: var(--text-primary);
+  text-align: center;          /* center horizontally */
+  display: flex;               /* center vertically if needed */
+  flex-direction: column;
+  justify-content: center;     /* vertical center */
+  align-items: center;         /* horizontal center */
 }
 
 /* Button container */
@@ -97,17 +114,19 @@
 
 /* PLACE BID button */
 .place-bid-btn {
-  background-color: #1976d2;
-  color: white;
+  background-color: var(--button-primary);
+  color: var(--button-text);
   font-weight: bold;
+  border-radius: var(--border-radius);
   transition: transform 0.2s, background-color 0.2s;
   cursor: pointer;
 }
 
 .place-bid-btn:hover {
-  background-color: #115293;
+  background-color: var(--button-secondary);
   transform: scale(1.05);
 }
+
 
 /* Responsive product card widths */
 @media (max-width: 900px) {
