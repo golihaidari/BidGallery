@@ -30,6 +30,15 @@ jobs:
           cache-dependency-path: ./frontend/package-lock.json
 
       # -------------------------------
+      # Clean install to fix Rollup optional dependency bug
+      - name: Clean npm install (to fix rullup bug)
+        run: | 
+          rm -rf node-moudles package-lock-json
+          npm cache clean --force
+          npm install
+        working-directory: ./frontend
+        
+      # -------------------------------
       # 3. Install frontend dependencies
       - name: Install frontend dependencies
         run: npm ci

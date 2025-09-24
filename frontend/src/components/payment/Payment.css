@@ -1,0 +1,35 @@
+/* The “Credit / MobilePay / GiftCard” selector */
+.payment-options {
+  width: 100%;
+  max-width: 500px;           /* desktop/tablet width */
+  box-sizing: border-box;
+}
+
+.payment-options {
+  margin-bottom: 16px; 
+  background-color: var(--button-text); 
+  padding: 12px 20px;
+  border-radius: 12px; 
+}
+
+/* MobilePay phone input full width */
+.react-tel-input .form-control {
+  margin-right: 500px;
+  width: 100% !important;
+  height: 48px;
+  border-radius: 2px;
+}
+
+/* Responsive rules */
+@media (max-width: 500px) {
+  .payment-options {
+    max-width: 90%;           /* shrink on small screens */
+    padding: 10px;
+  }
+  
+  /* Optional: tighter spacing on small screens */
+  .MuiTextField-root {
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
+}

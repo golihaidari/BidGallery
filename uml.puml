@@ -1,22 +1,22 @@
 @startuml
 skinparam linetype ortho
-entity "User" as User {
-    email : string <<PK>>
-    --
-    first_name : string
-    last_name : string
-    password : string
-}
 
-entity "Customer" as Customer {
-    + email : int <<PK, FK>>
+' -------------------
+' ENTITIES
+' -------------------
+entity "User" as User {
+    + user_id : int <<PK>>
     --
-    address : address_id <<FK>>
+    email : string
+    password : string
+    account_type : string
 }
 
 entity "Artist" as Artist {
-    + email : int <<PK, FK>>
+    + user_id : int <<PK, FK>>
     --
+    first_name : string
+    last_name : string
     bio : string
     style : string
 }
@@ -25,9 +25,26 @@ entity "Product" as Product {
     + product_id : int <<PK>>
     --
     title : string
-    price : decimal
+    secret_price : decimal
     currency : string
-    email : int <<FK>>
+    image_url : string
+    quantity : int
+    artist_id : int <<FK>>
+}
+
+entity "Address" as Address {
+    + address_id : int <<PK>>
+    --
+    first_name : string
+    last_name : string
+    email : string
+    mobile_nr : string
+    country : string
+    postal_code : string
+    city : string
+    address1 : string
+    address2 : string
+    user_id : int <<FK, nullable>>
 }
 
 entity "Order" as Order {
@@ -35,36 +52,21 @@ entity "Order" as Order {
     --
     order_date : date
     order_status : string
-    email : int <<FK>>
-}
-
-entity "OrderDetail" as OrderDetail {
-    + order_detail_id : int <<PK>>
-    --
-    order_id : int <<FK>>
+    user_id : int <<FK, nullable>>
     product_id : int <<FK>>
-    quantity : int
-}
-
-entity "Address" as Address {
-    + address_id : int <<PK>>
-    --
-    customer_id : int <<FK>>
-    street : string
-    city : string
-    postal_code : string
-    country : string
+    address_id : int <<FK>>
+    price : decimal
 }
 
 ' -------------------
 ' RELATIONSHIPS
 ' -------------------
-User ||--|| Customer : "is"
-User ||--|| Artist : "is"
-Customer ||--o{ Order : "places"
-Order ||--o{ OrderDetail : "contains"
-Product ||--o{ OrderDetail : "included in"
-Artist ||--o{ Product : "sells"
-Customer ||-up-o{ Address : "has"
+Artist-right-|| User : "is" 
+User --o{ Order : "places"
+Product }o--|| Artist : "creates"
+Order }o--|| Product : "contains"
+Order }o--|| Address : "ship to"
+User --o{ Address : "has"
 
 @enduml
+
