@@ -1,23 +1,15 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  Box,
-  Button,
-  Paper,
-  TextField,
-  Typography,
-  InputAdornment,
-  MenuItem,
-} from "@mui/material";
+import { useState, useEffect } from "react";
+import { Box, TextField, InputAdornment, MenuItem } from "@mui/material";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
-import type { CreditCard } from "@interfaces/CreditCard";
+import { useNavigate } from "react-router-dom";
 import usePostData from "@hook/fetchData";
-import BeatLoader from "@utils/beatloader/BeatLoader";
-import "@components/payment/Payment.css"
+import type { CreditCard } from "@interfaces/CreditCard";
 import { useCheckout } from "@context/CheckoutContext";
-
 import { createMockPaymentIntent } from "@utils/createMockPaymentIntent";
+import FormTemplate from "@utils/FormTemplate";
+import PaymentFormValidator from "@utils/PaymentFormValidator";
+import type { PaymentErrors } from "@utils/PaymentFormValidator";
 
 const initialPayment: CreditCard = {
   cardHolder: "",
@@ -27,32 +19,41 @@ const initialPayment: CreditCard = {
   expiryYear: "25",
 };
 
-const submitUrl = "https://eobr8yycab7ojzy.m.pipedream.net";
+const submitUrl = "https://eobr8yycab7ojzy.m.pipedream.ne";
 
 const CreditCardForm = () => {
   const [payment, setPayment] = useState<CreditCard>(initialPayment);
-  const { sendRequest, setError, status, isLoading, error } = usePostData<string>(submitUrl);
+  const [fieldErrors, setFieldErrors] = useState<PaymentErrors>({});
+  const { sendRequest, setError, status, isLoading, error: apiError } = usePostData<string>(submitUrl);
   const navigate = useNavigate();
-  const {dispatch}= useCheckout();
+  const { dispatch } = useCheckout();
 
   useEffect(() => {
     if (status === 200) {
       const { paymentIntentId } = createMockPaymentIntent();
-
-      dispatch({
-        type: "SET_PAYMENT_INTENT",
-        paymentIntentId,
-      });
-      navigate("/submit")
-    };
+      dispatch({ type: "SET_PAYMENT_INTENT", paymentIntentId });
+      navigate("/submit");
+    }
   }, [status, navigate, dispatch]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPayment({ ...payment, [e.target.name]: e.target.value });
+    setFieldErrors((prev) => ({ ...prev, [e.target.name]: "" })); // clear error on change
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleBlur = (field: keyof CreditCard) => (e: React.FocusEvent<HTMLInputElement>) => {
     e.preventDefault();
+    const errs = PaymentFormValidator.validateCreditCard(payment);
+    setFieldErrors((prev) => ({ ...prev, [field]: errs[field] || "" }));
+  };
+
+  const handleSubmit = () => {
+    const errs = PaymentFormValidator.validateCreditCard(payment);
+    setFieldErrors(errs);
+
+    // Stop submit if any errors
+    if (Object.keys(errs).length > 0) return;
+
     sendRequest(
       {
         method: "POST",
@@ -64,142 +65,118 @@ const CreditCardForm = () => {
   };
 
   return (
-    <Paper
-      elevation={3}
-      className="payment-form"                            
-    >                                                   {/*margin button    xs=mobile, sm=tablet, md=desktop*/}
-      <Typography variant="h6" sx={{ textAlign: "center", mb: 3, fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' } 
-   }}>
-        Payment Details
-      </Typography>
+    <FormTemplate
+      title="Payment Details"
+      onSubmit={handleSubmit}
+      loading={isLoading}
+      error={apiError || ""}
+      retry={() => setError("")}
+      submitLabel="Confirm Payment"
+    >
+      <TextField
+        fullWidth
+        label="Cardholder Name"
+        name="cardHolder"
+        margin="normal"
+        value={payment.cardHolder}
+        onChange={handleChange}
+        onBlur={handleBlur("cardHolder")}
+        error={!!fieldErrors.cardHolder}
+        helperText={fieldErrors.cardHolder}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <PersonOutlineIcon />
+            </InputAdornment>
+          ),
+        }}
+      />
 
-      {error ? (
-        <Box textAlign="center">
-          <Typography color="error" sx={{ mb: 2 }}>
-            {error}
-          </Typography>
-          <Button variant="contained" onClick={() => setError("")}>
-            Try Again
-          </Button>
-        </Box>
-      ) : (
-        <Box component="form" onSubmit={handleSubmit} noValidate>
-          {/* Cardholder Name */}
+      <TextField
+        fullWidth
+        label="Card Number"
+        name="cardNumber"
+        margin="normal"
+        value={payment.cardNumber}
+        onChange={handleChange}
+        onBlur={handleBlur("cardNumber")}
+        error={!!fieldErrors.cardNumber}
+        helperText={fieldErrors.cardNumber}
+        inputProps={{ maxLength: 19 }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <CreditCardIcon />
+            </InputAdornment>
+          ),
+        }}
+      />
+
+      {/* Expiration + CVC */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+        <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
           <TextField
-            fullWidth
-            label="Cardholder Name"
-            name="cardHolder"
-            margin="normal"
-            value={payment.cardHolder}
+            select
+            sx={{ width: 100 }}
+            label="Expiry Month"
+            name="expiryMonth"
+            value={payment.expiryMonth}
             onChange={handleChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PersonOutlineIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-
-          {/* Card Number */}
-          <TextField
-            fullWidth
-            label="Card Number"
-            name="cardNumber"
-            margin="normal"
-            value={payment.cardNumber}
-            onChange={handleChange}
-            inputProps={{ maxLength: 16 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <CreditCardIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-
-          {/* Expiration + CVV */}
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>          
-            <Box sx={{ display: "flex", gap: 1, mt:2 }}>
-              <TextField
-                select
-                sx={{ width: 100 }}
-                label="Expiry Month"
-                name="expiryMonth"
-                value={payment.expiryMonth}
-                onChange={handleChange}
-              >
-                <MenuItem value="" disabled>
-                  MM
-                </MenuItem>
-                <MenuItem value="01">01</MenuItem>
-                <MenuItem value="02">02</MenuItem>
-                <MenuItem value="03">03</MenuItem>
-                <MenuItem value="04">04</MenuItem>
-                <MenuItem value="05">05</MenuItem>
-                <MenuItem value="06">06</MenuItem>
-                <MenuItem value="07">07</MenuItem>
-                <MenuItem value="08">08</MenuItem>
-                <MenuItem value="09">09</MenuItem>
-                <MenuItem value="10">10</MenuItem>
-                <MenuItem value="11">11</MenuItem>
-                <MenuItem value="12">12</MenuItem>
-              </TextField>
-
-              <TextField
-                select
-                sx={{ width: 100 }}
-                label="Expiry Year"
-                name="expiryYear"
-                value={payment.expiryYear}
-                onChange={handleChange}
-              >
-                <MenuItem value="" disabled>
-                  YY
-                </MenuItem> 
-                <MenuItem value="25">25</MenuItem>
-                <MenuItem value="26">26</MenuItem>
-                <MenuItem value="27">27</MenuItem>
-                <MenuItem value="28">28</MenuItem>
-                <MenuItem value="29">29</MenuItem>
-                <MenuItem value="30">30</MenuItem>
-                <MenuItem value="31">31</MenuItem>
-                <MenuItem value="32">32</MenuItem>
-                <MenuItem value="33">33</MenuItem>
-                <MenuItem value="34">34</MenuItem>
-                <MenuItem value="35">35</MenuItem>
-              </TextField>           
-            </Box>
-
-            <TextField
-              sx={{ width: 100 , ml: "auto"}}
-              label="CVC"
-              placeholder="123"
-              name="cvcNumber"
-              margin="normal"
-              value={payment.cvcNumber}
-              onChange={handleChange}
-              inputProps={{
-                maxLength: 3,
-                pattern: "\\d{3}", // Accepts 3 digits only
-                title: "CVV must be 3 digits",
-              }}
-            />
-          </Box>
-
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, borderRadius: 5 }}
-            disabled={isLoading}
+            onBlur={handleBlur("expiryMonth")}
+            error={!!fieldErrors.expiryMonth}
+            helperText={fieldErrors.expiryMonth}
           >
-            {isLoading ? <BeatLoader /> : "Confirm"}
-          </Button>
+            <MenuItem value="" disabled>
+              MM
+            </MenuItem>
+            {Array.from({ length: 12 }, (_, i) => (
+              <MenuItem key={i} value={(i + 1).toString().padStart(2, "0")}>
+                {(i + 1).toString().padStart(2, "0")}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            select
+            sx={{ width: 100 }}
+            label="Expiry Year"
+            name="expiryYear"
+            value={payment.expiryYear}
+            onChange={handleChange}
+            onBlur={handleBlur("expiryYear")}
+            error={!!fieldErrors.expiryYear}
+            helperText={fieldErrors.expiryYear}
+          >
+            <MenuItem value="" disabled>
+              YY
+            </MenuItem>
+            {Array.from({ length: 11 }, (_, i) => (
+              <MenuItem key={i} value={(25 + i).toString()}>
+                {25 + i}
+              </MenuItem>
+            ))}
+          </TextField>
         </Box>
-      )}
-    </Paper>
+
+        <TextField
+          sx={{ width: 100, ml: "auto" }}
+          label="CVC"
+          placeholder="123"
+          name="cvcNumber"
+          margin="normal"
+          value={payment.cvcNumber}
+          onChange={handleChange}
+          onBlur={handleBlur("cvcNumber")}
+          error={!!fieldErrors.cvcNumber}
+          helperText={fieldErrors.cvcNumber}
+          inputProps={{
+            maxLength: 4,
+            pattern: "\\d{3,4}",
+            title: "CVC must be 3 or 4 digits",
+          }}
+        />
+      </Box>
+    </FormTemplate>
   );
 };
 
