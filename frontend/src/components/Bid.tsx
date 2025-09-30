@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Box, Typography, TextField } from "@mui/material";
 import useFetch from "@hook/fetchData";
 import { useCheckout } from "@context/CheckoutContext";
+import { useLocation } from "react-router-dom";
 import FormTemplate from "@utils/FormTemplate";
 import FormValidator from "@utils/UserFormValidator";
 
@@ -12,7 +13,6 @@ const Bid: React.FC = () => {
   const { state, dispatch } = useCheckout();
   const navigate = useNavigate();
 
-  // Local validation error for the bid input
   const [fieldError, setFieldError] = useState("");
   const [bidAmount, setBidAmount] = useState<number>(0);
 
@@ -23,9 +23,11 @@ const Bid: React.FC = () => {
     message?: string;
   }>(submitUrl);
 
-  if (!state.product) return <h1>No product selected</h1>;
+  const location = useLocation();
+  const selectedProduct = location.state?.product;
+  if (!selectedProduct) return <h1>No product selected</h1>;
 
-  // Validate when the field loses focus
+  // Validate input when field loses focus
   const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const err = FormValidator.validateField("bidAmount", e.target.value);
     setFieldError(err);
@@ -35,48 +37,55 @@ const Bid: React.FC = () => {
     const err = FormValidator.validateField("bidAmount", String(bidAmount));
     if (err) {
       setFieldError(err);
-      return; // Stop submit if invalid
+      return;
     }
 
     const options: RequestInit = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
-        productId: state.product?.id,
-        amount: bidAmount, }),
-      mode: "cors", // explicitly added
+        productId: selectedProduct?.id,
+        amount: bidAmount, 
+      }),
+      mode: "cors",
     };
 
-    sendRequest( options, "Failed to submit bid");
+    sendRequest(options, "Failed to submit bid");
   };
 
   useEffect(() => {
     if (status === 200) {
-      dispatch({ type: "SET_BID", bidPrice: bidAmount });
-      navigate("/delivery");
+      // Add product to cart if not already there
+      const alreadyInCart = state.cart.find(item => item.product.id === selectedProduct?.id);
+      if (!alreadyInCart && selectedProduct) {
+        dispatch({ 
+          type: "ADD_TO_CART", 
+          item: { product: selectedProduct, bidPrice: bidAmount } 
+        });
+      }
+
+      navigate("/"); // navigate to product page
     }
-  }, [status, dispatch, navigate, bidAmount]);
+  }, [status, dispatch, navigate, bidAmount, state.cart, selectedProduct]);
 
   return (
     <FormTemplate
-      title={`Place your bid for: ${state.product.title}`}
+      title={`Place your bid for: ${selectedProduct.title}`}
       submitLabel="Submit Bid"
       onSubmit={handleSubmit}
       loading={isLoading}
-      // Show API error OR local field error
       error={apiError || ""}
     >
-      <Box textAlign="center" sx={{ mb: 3 }}>
-        <img
-          src={state.product.image}
-          alt={state.product.title}
-          style={{ maxWidth: "100%", borderRadius: 8 }}
-        />
-      </Box>
+      <Box textAlign="center" 
+        component="img"
+        src={selectedProduct.image}
+        alt={selectedProduct.title}
+        sx={{ maxWidth: "100%", borderRadius: 2, mb: 3 }}
+      />
 
       <Typography variant="body1" sx={{ mb: 2 }}>
-        Original price: {state.product.price.toFixed(2)}{" "}
-        {state.product.currency}
+        Original price: {selectedProduct.price.toFixed(2)}{" "}
+        {selectedProduct.currency}
       </Typography>
 
       <TextField

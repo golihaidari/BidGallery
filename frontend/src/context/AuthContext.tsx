@@ -1,33 +1,41 @@
-import React, { createContext, useContext, useState } from "react";
-
-interface AuthState {
-  email: string | null;
-  token: string | null;
-}
+import { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
 
 interface AuthContextType {
-  auth: AuthState;
-  login: (email: string, token: string) => void;
+  userEmail: string | null;
+  login: (email: string) => void;
   logout: () => void;
+  isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [auth, setAuth] = useState<AuthState>({ email: null, token: null });
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  const login = (email: string, token: string) => {
-    setAuth({ email, token });
-    localStorage.setItem("auth", JSON.stringify({ email, token })); // persist
+  useEffect(() => {
+    // Optionally, you can call /auth/me to verify HttpOnly cookie and set user
+    fetch("/api/auth/me", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (data.email) setUserEmail(data.email);
+      });
+  }, []);
+
+  const login = (email: string) => {
+    setUserEmail(email);
   };
 
-  const logout = () => {
-    setAuth({ email: null, token: null });
-    localStorage.removeItem("auth");
+  const logout = async () => {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+    setUserEmail(null);
   };
 
   return (
-    <AuthContext.Provider value={{ auth, login, logout }}>
+    <AuthContext.Provider value={{ userEmail, login, logout, isAuthenticated: !!userEmail }}>
       {children}
     </AuthContext.Provider>
   );
