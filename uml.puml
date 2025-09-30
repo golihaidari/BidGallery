@@ -8,8 +8,8 @@ entity "User" as User {
     + user_id : int <<PK>>
     --
     email : string
-    password : string
-    account_type : string
+    password : string <<nullable>> 
+    account_type : string <<enum>>  ' CUSTOMER, ARTIST, ADMIN, GOOGLE
 }
 
 entity "Artist" as Artist {
@@ -53,9 +53,16 @@ entity "Order" as Order {
     order_date : date
     order_status : string
     user_id : int <<FK, nullable>>
-    product_id : int <<FK>>
     address_id : int <<FK>>
-    price : decimal
+}
+
+entity "OrderItem" as OrderItem {
+    + order_item_id : int <<PK>>
+    --
+    order_id : int <<FK>>
+    product_id : int <<FK>>
+    quantity : int
+    price_at_purchase : decimal
 }
 
 ' -------------------
@@ -64,9 +71,9 @@ entity "Order" as Order {
 Artist-right-|| User : "is" 
 User --o{ Order : "places"
 Product }o--|| Artist : "creates"
-Order }o--|| Product : "contains"
-Order }o--|| Address : "ship to"
+Order --o{ OrderItem : "contains"
+OrderItem }o--|| Product : "references"
+Order }o--|| Address : "ships to"
 User --o{ Address : "has"
 
 @enduml
-
