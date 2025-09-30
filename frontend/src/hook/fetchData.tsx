@@ -11,7 +11,7 @@ const useFetch =<T,>(url: string)=>{
     function sendRequest(options?: RequestInit, errorMessage?: string){   
         setIsLoading(true);
         setError("");
-        fetch(url,{ ...options, mode: "cors" }) // <- added mode: "cors"
+        fetch(url,{ ...options, mode: "cors"}) // <- added mode: "cors"
                 .then((response) => {
                     setStatus(response.status)
                     if (!response.ok) {

@@ -115,7 +115,7 @@ export default function Register() {
 
   useEffect(() => {
     if (status === 200 && data?.success) {
-      login(form.email, data.message!);
+      login(form.email);
       navigate("/");
     }
   }, [status, data, login, form.email, navigate]);

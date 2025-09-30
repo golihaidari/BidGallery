@@ -1,0 +1,85 @@
+.navbar{
+   border-radius: var(--border-radius);
+   margin-bottom: 20px;
+}
+
+/* Logo */
+.navbar .logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Menu items */
+.navbar .menu-item {
+  cursor: pointer;
+  font-weight: 500;
+  color: #333;
+  transition: color 0.2s;
+}
+
+.navbar .menu-item:hover {
+  color: var(--button-secondary);
+}
+
+.navbar .menu-item.active {
+  color: var(--button-primary);
+  font-weight: bold;
+}
+
+/* Search field */
+.navbar .search-field {
+  width: 300px;
+  max-width: 40%;
+  background-color: var(--input-bg);
+  border-radius: var(--border-radius);
+  padding: 4px 8px;
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.navbar .search-field:hover,
+.navbar .search-field:focus-within {
+  box-shadow: var(--card-shadow);
+  transform: scale(1.02);
+}
+
+/* Buttons */
+.navbar .auth-button {
+  background-color: var(--button-primary);
+  color: var(--button-text);
+  border-radius: var(--border-radius);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.navbar .auth-button:hover {
+  background-color: var(--button-secondary);
+  transform: scale(1.05);
+}
+
+/* Cart icon */
+.navbar .cart-btn {
+  color: var(--button-primary);
+  transition: color 0.2s, transform 0.2s;
+}
+
+.navbar .cart-btn:hover {
+  color: var(--button-secondary);
+  transform: scale(1.1);
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  .navbar {
+    justify-content: space-between;
+  }
+
+  .navbar .menu-item {
+    display: none; /* hide desktop menu */
+  }
+
+  .navbar .search-field {
+    width: 100%;
+  }
+}

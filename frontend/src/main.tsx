@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import '../index.css';
 
 // Components
@@ -15,6 +16,9 @@ import Submit from '@components/Submit.tsx';
 //context
 import CheckoutProvider from './context/CheckoutContext.tsx';
 import { AuthProvider } from '@context/AuthContext.tsx';
+import Cart from '@components/Cart.tsx';
+import Layout from '@components/navbar/Layout.tsx';
+import OrderSuccess from '@components/OrderSuccess.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -22,13 +26,18 @@ createRoot(document.getElementById('root')!).render(
       <CheckoutProvider>
         <BrowserRouter>
           <Routes>
-            <Route path='/' element={<Products/>}/>
-            <Route path="/login" element={<Login/>}/>
-            <Route path="/register" element={<Register/>}/>          
-            <Route path='/giveBid' element={<Bid/>} />
-            <Route path='/delivery' element={<ShippingAddress/>}/>
-            <Route path='/payment' element={<Payment/>}/>
-            <Route path='/submit' element={<Submit/>}/>            
+            <Route element={<Layout />}>
+              <Route path='/' element={<Products/>}/>                        
+              <Route path='/giveBid' element={<Bid/>} />
+            </Route>
+              <Route path="/login" element={<Login/>}/>
+              <Route path="/register" element={<Register/>}/> 
+              <Route path='/cart' element={<Cart/>} />
+              <Route path='/delivery' element={<ShippingAddress/>}/>
+              <Route path='/payment' element={<Payment/>}/>
+              <Route path='/submit' element={<Submit/>}/> 
+              <Route path='/orderSuccess' element={<OrderSuccess/>}/>
+                      
           </Routes>
         </BrowserRouter> 
       </CheckoutProvider>
