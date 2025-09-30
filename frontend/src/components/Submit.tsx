@@ -3,6 +3,7 @@ import { useCheckout } from "@context/CheckoutContext";
 import { useNavigate } from "react-router-dom";
 import useFetch from "@hook/fetchData";
 import FormTemplate from "@utils/FormTemplate";
+import type { CartItem } from "@interfaces/CheckoutData";
 
 export default function Submit() {
   const { state } = useCheckout();
@@ -17,8 +18,10 @@ export default function Submit() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          productId: state.product?.id,
-          bidPrice: state.bidPrice,
+          cart: state.cart.map(item => ({
+            productId: item.product.id,
+            bidPrice: item.bidPrice,
+          })),
           address: state.address,
           paymentIntentId: state.paymentIntentId,
         }),
@@ -26,10 +29,10 @@ export default function Submit() {
       "Failed to submit order"
     );
 
-    setTimeout(() => navigate("/"), 1000); // redirect after 1s for demo
+    setTimeout(() => navigate("/orderSuccess"), 5000); // redirect after 5s for demo
   };
 
-  if (!state.product) return <h1>No product selected</h1>;
+  if (!state.cart || state.cart.length === 0) return <h1>No products in cart</h1>;
 
   const addressText = state.address
     ? `${state.address.firstName} ${state.address.lastName}\n${state.address.street}\n${state.address.city}, ${state.address.postalCode}\n${state.address.country}`
@@ -37,57 +40,63 @@ export default function Submit() {
 
   return (
     <FormTemplate
-      title="Confirm Your Order"
+      title="Order Receipt"
       onSubmit={handlePlaceOrder}
       loading={isLoading}
-      submitLabel="Place Order"
+      submitLabel="Confirm Order"
       error={error}
     >
-      {/* Product image */}
-      <Box textAlign="center" sx={{ mb: 3 }}>
-        <img
-          src={state.product.image}
-          alt={state.product.title}
-          style={{ maxWidth: "100%", borderRadius: 4 }}
-        />
-      </Box>
-
-      {/* Two-column details */}
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        {[
-          { label: "Product", value: state.product.title },
-          { label: "Bid Price", value: state.bidPrice },
-          {
-            label: "Shipping Address",
-            value: addressText,
-            multiline: true,
-            minRows: 3,
-          },
-          { label: "Payment ID", value: state.paymentIntentId },
-        ].map((item) => (
+      <Box sx={{ maxWidth: 700, mx: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+        {/* Cart items */}
+        {state.cart.map((item: CartItem, index: number) => (
           <Box
-            key={item.label}
-            sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}
+            key={index}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              p: 2,
+              borderRadius: 2,
+              backgroundColor: "var(--card-bg)",
+              boxShadow: "0px 2px 8px rgba(0,0,0,0.1)",
+            }}
           >
-            {/* Left column: label */}
-            <Typography sx={{ minWidth: 130, fontWeight: 500 }}>
-              {item.label}:
-            </Typography>
-
-            {/* Right column: read-only TextField */}
-            <TextField
-              value={item.value}
-              fullWidth
-              size="small"
-              InputProps={{
-                readOnly: true,
-              }}
-              variant="outlined"
-              multiline={item.multiline || false}
-              minRows={item.minRows || 1}
+            <Box
+              component="img"
+              src={item.product.image}
+              alt={item.product.title}
+              sx={{ width: 80, height: 80, borderRadius: 1, objectFit: "cover" }}
             />
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="subtitle1">{item.product.title}</Typography>
+              <Typography variant="body2">
+                Bid Price: {item.bidPrice} {item.product.currency}
+              </Typography>
+            </Box>
           </Box>
         ))}
+
+        {/* Shipping address */}
+        <TextField
+          label="Shipping Address"
+          value={addressText}
+          fullWidth
+          multiline
+          minRows={3}
+          disabled
+          variant="outlined"
+          InputProps={{ readOnly: true }}
+        />
+
+        {/* Payment ID */}
+        <TextField
+          label="Payment ID"
+          value={state.paymentIntentId}
+          fullWidth
+          disabled
+          variant="outlined"
+          InputProps={{ readOnly: true }}
+        />
       </Box>
     </FormTemplate>
   );
