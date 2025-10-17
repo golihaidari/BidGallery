@@ -6,7 +6,7 @@ import usePostData from "@hook/fetchData";
 import { useAuth } from "@context/AuthContext.tsx";
 import FormTemplate from "@utils/FormTemplate";
 import FormValidator from "@utils/UserFormValidator";
-import type { User } from "@interfaces/models/User";
+import type { User } from "@interfaces/User.tsx";
 import type { Artist } from "@interfaces/Artist";
 import type { Address } from "@interfaces/Address.tsx";
 import { API_URL } from "../config.tsx";
