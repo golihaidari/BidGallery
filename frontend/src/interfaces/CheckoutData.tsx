@@ -1,5 +1,5 @@
-import type { Address } from "./models/Address";
-import type { Product } from "./Product";
+import type { Address } from "./Address.tsx";
+import type { Product } from "./Product.tsx";
 
 export interface CartItem {
   product: Product;

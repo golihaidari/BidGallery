@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Box, TextField, Autocomplete } from "@mui/material";
 import countries from "world-countries";
 import { useCheckout } from "@context/CheckoutContext";
-import type { Address } from "@interfaces/models/Address";
+import type { Address } from "@interfaces/Address";
 import FormTemplate from "@utils/FormTemplate";
-import FormValidator from "@utils/UserFormValidator";
+import FormValidator, {type FormValues} from "@utils/UserFormValidator";
 import { useNavigate } from "react-router-dom";
 
 // Sorted country list
@@ -21,11 +21,11 @@ export default function ShippingAddress() {
       lastName: "",
       email: "",
       mobileNr: "",
-      country: "Denmark",
+      country: "Denmark ",
       postalCode: "",
       city: "",
-      street: "",
-      address: "",
+      address1: "",
+      address2: "",
     }
   );
 
@@ -38,7 +38,7 @@ export default function ShippingAddress() {
   };
 
   const onBlur = (field: keyof Address) => (e: React.FocusEvent<HTMLInputElement>) => {
-    const error = FormValidator.validateField(field, e.target.value, address);
+    const error = FormValidator.validateField(field, e.target.value, address as unknown as FormValues);
     setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
@@ -50,7 +50,7 @@ export default function ShippingAddress() {
       mobileNr: FormValidator.validateField("mobileNr", address.mobileNr),
       postalCode: FormValidator.validateField("postalCode", address.postalCode),
       city: FormValidator.validateField("city", address.city),
-      street: FormValidator.validateField("street", address.street),
+      address1: FormValidator.validateField("address1", address.address1),
     };
 
     setErrors(fieldErrors);
@@ -65,8 +65,17 @@ export default function ShippingAddress() {
     <FormTemplate
       title="Shipping Address"
       onSubmit={handleSubmit}
-      error="" // this page doe not send data to api, so there is no api error.
+      error="" // this page does not send data to api, so there is no api error.
       submitLabel="Next"
+      disableSubmit ={!address.firstName ||
+                      !address.lastName ||
+                      !address.email ||
+                      !address.mobileNr ||
+                      !address.country ||
+                      !address.postalCode ||
+                      !address.city ||
+                      
+                      !address.address1}
     >
       <Box
         sx={{
@@ -116,13 +125,26 @@ export default function ShippingAddress() {
           fullWidth
         />
         <Autocomplete
+          freeSolo //to allow custom input
           options={countryList}
           value={address.country}
           onChange={(_, value) =>
             setAddress((prev) => ({ ...prev, country: value || "" }))
           }
-          renderInput={(params) => <TextField {...params} label="Country" fullWidth />}
+          renderInput={(params) => <TextField {...params} 
+                                      label="Country" 
+                                      fullWidth 
+                                      error={!!errors.country}
+                                      helperText={errors.country}
+                                      onBlur={() => {
+                                        if (!address.country || address.country.trim() === "") {
+                                          setErrors((prev) => ({ ...prev, country: "Country is required" }));
+                                        }
+                                      }}
+                                    />
+          }
         />
+
         <TextField
           label="Postal Code"
           name="postalCode"
@@ -144,19 +166,19 @@ export default function ShippingAddress() {
           fullWidth
         />
         <TextField
-          label="Street Address"
-          name="street"
-          value={address.street}
+          label="Address1"
+          name="address1"
+          value={address.address1}
           onChange={handleChange}
-          onBlur={onBlur("street")}
-          error={!!errors.street}
-          helperText={errors.street}
+          onBlur={onBlur("address1")}
+          error={!!errors.address1}
+          helperText={errors.address1}
           fullWidth
         />
         <TextField
           label="Address Line 2 (optional)"
-          name="address"
-          value={address.address}
+          name="address2"
+          value={address.address2}
           onChange={handleChange}
           fullWidth
           sx={{ gridColumn: "1 / -1" }}

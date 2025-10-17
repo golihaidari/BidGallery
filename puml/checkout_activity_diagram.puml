@@ -1,0 +1,40 @@
+@startuml checkout_activity_diagram
+skinparam ranksep 5
+
+start
+
+:Customer views Cart;
+if (Cart empty?) then (yes)
+  :Show message "Cart is empty";
+  stop
+else (no)
+  :Review selected products and bid prices;
+endif
+
+:Click "Proceed to Checkout";
+
+:Enter Shipping Address;
+if (User logged in?) then (yes)
+  :Prefill address from account;
+else (no)
+  :Enter address manually;
+endif
+
+:Select Payment Method;
+repeat
+    :Enter Payment Details;
+    :Validate Payment;
+
+    if (Payment successful?) then (yes)
+      :Show Order Review / Submit page;
+      :Confirm Order;
+      :Create Order in backend;
+      :Send Order Confirmation to Customer;
+      :Update inventory and bid status;
+      stop
+    else (no)
+      :Show Payment Error;
+    endif
+repeat while
+
+@enduml

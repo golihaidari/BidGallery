@@ -63,6 +63,7 @@ const GiftCardForm = () => {
       error={apiError}
       retry={() => setError("")}
       submitLabel="Confirm Payment"
+      disableSubmit={!form.giftCardnumber || !form.securityCode}
     >
       <Box textAlign="center" sx={{ mb: 3 }}>
         <img src={giftCardIcon} alt="Gift Card" className="giftcard-Img" />

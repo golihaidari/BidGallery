@@ -1,0 +1,43 @@
+@startuml
+title High-Level System Architecture (Art Gallery: 3-Tier View)
+
+actor User
+
+' --- Frontend ---
+package "a) Frontend (Client)"{
+    rectangle "Single Page Application \n(React + Vite + TS)" as FE
+}
+
+' --- External services ---
+rectangle "d) External Identity Provider\n(OAuth)" as IdP
+rectangle "e) External Payment API \n(Pipedream Mock)" as Payment
+database "c) MariaDB\nUsers, Artists, Addresses, Products, Orders" as DB
+
+' --- Backend layers ---
+package "b) Backend (Server)" {
+  rectangle "Controller Layer" {
+    rectangle "Other Endpoints" as OtherCtrl
+    rectangle "Auth Endpoint (/auth/login)" as AuthCtrl    
+  }
+  rectangle "Service Layer\nBusiness Logic" {
+    rectangle "Auth" as AuthSer
+    rectangle "Orders, Users, Products, Addresses" as OtherService
+  }
+  rectangle "Repository Layer\nDatabase Access (MariaDB CRUD)" as Repo
+}
+
+' --- Connections (two-way implied) ---
+User -- FE
+FE -- AuthCtrl : send ID token / receive JWT
+FE -- OtherCtrl : API requests / response
+
+AuthCtrl -- AuthSer
+OtherCtrl -- OtherService
+
+OtherService -- Repo : query / return data
+Repo -- DB : read/write
+OtherService -- Payment : call / response
+AuthSer -- IdP : verify token / result
+FE -- IdP : OAuth request / ID token
+
+@enduml

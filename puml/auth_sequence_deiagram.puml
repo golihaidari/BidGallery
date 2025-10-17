@@ -1,0 +1,36 @@
+@startuml auth_sequence_diagram
+title Sequence Diagram: User Login / Registration
+
+actor User
+participant "Frontend (React SPA)" as FE
+participant "Auth Controller\n(Backend)" as AuthCtrl
+participant "Auth Service\n(Business Logic)" as AuthSer
+participant "External Identity Provider\n(Google OAuth)" as IdP
+database "MariaDB" as DB
+
+== Login with Google OAuth ==
+User -> FE: Click "Login with Google"
+FE -> IdP: Redirect to Google OAuth
+IdP -> User: Login form (Google account)
+User -> IdP: Enter credentials
+IdP -> FE: Return ID token
+FE -> AuthCtrl: Send ID token
+AuthCtrl -> AuthSer: Validate ID token
+AuthSer -> IdP: Verify token
+IdP --> AuthSer: Token valid
+AuthSer -> DB: Check if user exists
+DB --> AuthSer: User found / not found
+
+alt Existing User
+  AuthSer -> AuthCtrl: Generate JWT for session
+  AuthCtrl -> FE: JWT + success
+  FE -> User: Redirect to app (logged in)
+else New User (Registration)
+  AuthSer -> DB: Create new user record
+  DB --> AuthSer: User created
+  AuthSer -> AuthCtrl: Generate JWT for session
+  AuthCtrl -> FE: JWT + success
+  FE -> User: Redirect to app (registered & logged in)
+end
+
+@enduml

@@ -17,12 +17,14 @@ const Cart: React.FC = () => {
   };
 
   const handleCheckout = () => {
-    // You can navigate to delivery/payment page
     navigate("/delivery");
   };
 
   return (
-    <FormTemplate title="Your Cart" submitLabel="Proceed to Checkout" onSubmit={handleCheckout}>
+    <FormTemplate title="Your Cart" 
+                  submitLabel="Proceed to Checkout" 
+                  onSubmit={handleCheckout}
+                  disableSubmit= {false}>
       {state.cart.length === 0 ? (
         <Typography variant="body1" sx={{ mt: 2 }}>
           Your cart is empty.
@@ -45,7 +47,7 @@ const Cart: React.FC = () => {
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <img
-                  src={item.product.image}
+                  src={item.product.imageUrl}
                   alt={item.product.title}
                   style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8 }}
                 />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { TextField, MenuItem, Box, Autocomplete } from "@mui/material";
 import countries from "world-countries";
@@ -7,11 +7,12 @@ import { useAuth } from "@context/AuthContext.tsx";
 import FormTemplate from "@utils/FormTemplate";
 import FormValidator from "@utils/UserFormValidator";
 import type { User } from "@interfaces/models/User";
-import type { Artist } from "@interfaces/models/Artist";
-import type { Address } from "@interfaces/models/Address";
+import type { Artist } from "@interfaces/Artist";
+import type { Address } from "@interfaces/Address.tsx";
+import { API_URL } from "../config.tsx";
 
 const countryList = countries.map((c) => c.name.common).sort();
-const submitUrl = "api/registerUser";
+const submitUrl = `${API_URL}/api/auth/register`;
 
 export default function Register() {
   const navigate = useNavigate();
@@ -31,10 +32,11 @@ export default function Register() {
     country: "Denmark",
     postalCode: "",
     city: "",
-    street: "",
-    address: "",
+    address1: "",
+    address2: "",
     bio: "",
     style: "",
+    imageUrl: "", // optional field
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -53,24 +55,33 @@ export default function Register() {
   };
 
   const handleSignUp = () => {
-    // determine which fields to validate
-    const fieldsToValidate = form.accountType === "artist"
-      ? ["firstName", "lastName", "email", "password", "rePassword", "bio", "style"]
-      : ["firstName", "lastName", "email", "password", "rePassword", "mobileNr", "country", "postalCode", "city", "street", "address"];
+    const fieldsToValidate =
+      form.accountType === "artist"
+        ? ["firstName", "lastName", "email", "password", "rePassword", "bio", "style"]
+        : [
+            "firstName",
+            "lastName",
+            "email",
+            "password",
+            "rePassword",
+            "mobileNr",
+            "country",
+            "postalCode",
+            "city",
+            "address1",
+          ];
 
     const newErrors: { [key: string]: string } = {};
-
     fieldsToValidate.forEach((field) => {
       const error = FormValidator.validateField(field, form[field as keyof typeof form], form);
       if (error) newErrors[field] = error;
     });
 
     setErrors(newErrors);
-    console.log("Validation errors:", newErrors);
     if (Object.values(newErrors).some(Boolean)) return;
 
-    setError(""); // Clear previous API errors before sending
-    
+    setError(""); // clear previous API errors
+
     const payload: { user: User; artist?: Artist | null; address?: Address | null } = {
       user: {
         email: form.email,
@@ -84,6 +95,7 @@ export default function Register() {
               lastName: form.lastName,
               bio: form.bio,
               style: form.style,
+              imageUrl: form.imageUrl || "", // optional
             }
           : null,
       address:
@@ -96,18 +108,19 @@ export default function Register() {
               country: form.country,
               postalCode: form.postalCode,
               city: form.city,
-              street: form.street,
-              address: form.address,
+              address1: form.address1,
+              address2: form.address2,
             }
           : null,
     };
+
     console.log("Sending request with payload:", payload);
 
     const options: RequestInit = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-      mode: "cors", 
+      mode: "cors",
     };
 
     sendRequest(options, "Registration failed. Please try again.");
@@ -127,14 +140,42 @@ export default function Register() {
       loading={isLoading}
       error={apiError || ""}
       submitLabel={isLoading ? "Registering..." : "Sign Up"}
+      disableSubmit= {form.accountType === "artist"
+                                                  ? (
+                                                      !form.firstName ||
+                                                      !form.lastName ||
+                                                      !form.email ||
+                                                      !form.password ||
+                                                      !form.rePassword ||
+                                                      !form.bio ||
+                                                      !form.style
+                                                      // imageUrl is optional
+                                                    )
+                                                  : (
+                                                      !form.firstName ||
+                                                      !form.lastName ||
+                                                      !form.email ||
+                                                      !form.password ||
+                                                      !form.rePassword ||
+                                                      !form.mobileNr ||
+                                                      !form.country ||
+                                                      !form.postalCode ||
+                                                      !form.city ||
+                                                      !form.address1
+                                                      // address2 is optional
+                                                    )}
     >
       <Box
         sx={{
           display: "grid",
           gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-          gap: 3,
+          gap: 1.5, // reduces space between inputs
+          '& .MuiTextField-root': {
+            margin: 0.5, // remove extra margin inside textfields
+          },
         }}
       >
+        {/* Basic user fields */}
         <TextField
           fullWidth
           label="First Name"
@@ -144,6 +185,8 @@ export default function Register() {
           onBlur={onBlur("firstName")}
           error={!!errors.firstName}
           helperText={errors.firstName}
+          size="small"
+          margin="dense"
         />
         <TextField
           fullWidth
@@ -154,6 +197,8 @@ export default function Register() {
           onBlur={onBlur("lastName")}
           error={!!errors.lastName}
           helperText={errors.lastName}
+          size="small"
+          margin="dense"
         />
         <TextField
           fullWidth
@@ -165,6 +210,8 @@ export default function Register() {
           error={!!errors.email}
           helperText={errors.email}
           sx={{ gridColumn: "1 / -1" }}
+          size="small"
+          margin="dense"
         />
         <TextField
           fullWidth
@@ -176,6 +223,8 @@ export default function Register() {
           onBlur={onBlur("password")}
           error={!!errors.password}
           helperText={errors.password}
+          size="small"
+          margin="dense"
         />
         <TextField
           fullWidth
@@ -187,6 +236,8 @@ export default function Register() {
           onBlur={onBlur("rePassword")}
           error={!!errors.rePassword}
           helperText={errors.rePassword}
+          size="small"
+          margin="dense"
         />
         <TextField
           select
@@ -195,11 +246,14 @@ export default function Register() {
           value={form.accountType}
           onChange={handleChange}
           sx={{ gridColumn: "1 / -1" }}
+          size="small"
+          margin="dense"
         >
           <MenuItem value="customer">Customer</MenuItem>
           <MenuItem value="artist">Artist</MenuItem>
         </TextField>
 
+        {/* Artist-specific fields */}
         {form.accountType === "artist" && (
           <>
             <TextField
@@ -212,6 +266,8 @@ export default function Register() {
               error={!!errors.style}
               helperText={errors.style}
               sx={{ gridColumn: "1 / -1" }}
+              size="small"
+              margin="dense"
             />
             <TextField
               fullWidth
@@ -225,10 +281,32 @@ export default function Register() {
               error={!!errors.bio}
               helperText={errors.bio}
               sx={{ gridColumn: "1 / -1" }}
+              size="small"
+              margin="dense"
             />
+            <TextField
+              fullWidth
+              label="Profile Image URL (optional)"
+              name="imageUrl"
+              value={form.imageUrl}
+              onChange={handleChange}
+              sx={{ gridColumn: "1 / -1" }}
+              size="small"
+              margin="dense"
+            />
+            {form.imageUrl && (
+              <Box sx={{ gridColumn: "1 / -1" }}>
+                <img
+                  src={form.imageUrl}
+                  alt="Profile Preview"
+                  style={{ width: "120px", borderRadius: "8px", marginTop: "8px" }}
+                />
+              </Box>
+            )}
           </>
         )}
 
+        {/* Customer-specific fields */}
         {form.accountType === "customer" && (
           <>
             <TextField
@@ -240,6 +318,8 @@ export default function Register() {
               onBlur={onBlur("mobileNr")}
               error={!!errors.mobileNr}
               helperText={errors.mobileNr}
+              size="small"
+              margin="dense"
             />
             <Autocomplete
               options={countryList}
@@ -247,9 +327,12 @@ export default function Register() {
               onChange={(_, value) =>
                 setForm((prev) => ({ ...prev, country: value || "" }))
               }
-              renderInput={(params) => (
-                <TextField {...params} label="Country" fullWidth />
-              )}
+              renderInput={(params) => <TextField {...params} 
+                                          label="Country" 
+                                          fullWidth 
+                                          size="small"
+                                          margin="dense"
+                                       />}
             />
             <TextField
               fullWidth
@@ -260,6 +343,8 @@ export default function Register() {
               onBlur={onBlur("postalCode")}
               error={!!errors.postalCode}
               helperText={errors.postalCode}
+              size="small"
+              margin="dense"
             />
             <TextField
               fullWidth
@@ -270,23 +355,29 @@ export default function Register() {
               onBlur={onBlur("city")}
               error={!!errors.city}
               helperText={errors.city}
+              size="small"
+              margin="dense"
             />
             <TextField
               fullWidth
-              label="Street"
-              name="street"
-              value={form.street}
+              label="Address1"
+              name="address1"
+              value={form.address1}
               onChange={handleChange}
-              onBlur={onBlur("street")}
-              error={!!errors.street}
-              helperText={errors.street}
+              onBlur={onBlur("address1")}
+              error={!!errors.address1}
+              helperText={errors.address1}
+              size="small"
+              margin="dense"
             />
             <TextField
               fullWidth
-              label="House Nr, floor"
-              name="address"
-              value={form.address}
+              label="Address2 (optional)"
+              name="address2"
+              value={form.address2}
               onChange={handleChange}
+              size="small"
+              margin="dense"
             />
           </>
         )}

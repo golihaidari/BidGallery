@@ -64,6 +64,7 @@ const MobilePayForm = () => {
       error={apiError}
       retry={() => setError("")}
       submitLabel="Confirm Payment"
+      disableSubmit={!form.mobilePayNumber}
     >
       <Box textAlign="center" sx={{ mb: 3 }}>
         <img src={mobilepayImg} alt="MobilePay" className="mobilepay-Img" />

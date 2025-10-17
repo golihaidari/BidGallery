@@ -1,0 +1,47 @@
+@startuml checkout_sequence_diagram
+title Checkout Sequence Diagram
+
+actor User
+participant "Frontend (React)" as FE
+participant "Backend (Jersey)" as BE
+database "MariaDB" as DB
+participant "Payment Provider (Mock)" as Pay
+
+== Browsing Products ==
+User -> FE : Open Products Page
+FE -> BE : GET /products
+BE -> DB : Query product list
+DB --> BE : Return products
+BE --> FE : Return product data
+FE --> User : Display products
+
+== Bidding ==
+User -> FE : Select product + enter bid
+FE -> BE : POST /bid {productId, bidValue}
+BE -> DB : Validate bid & product
+DB --> BE : Product details
+BE --> FE : Bid accepted → added to cart
+FE --> User : Cart updated
+
+== Checkout Flow ==
+User -> FE : Go to cart
+FE -> User : Show cart summary (review items, total)
+
+User -> FE : Proceed to shipping
+FE -> User : Enter shipping address
+
+User -> FE : Enter payment details (card/mobile/gift card)
+FE -> Pay : Send payment details
+Pay --> FE : Return payment token / approval
+
+== Confirm Order ==
+User -> FE : Confirm order
+FE -> BE : POST /order {cart, address, paymentToken}
+BE -> Pay : Verify payment token
+Pay --> BE : Payment success
+BE -> DB : Save order + items, status='Paid'
+DB --> BE : OK
+BE --> FE : Return order confirmation
+FE --> User : Show "Congratulations! Order placed"
+
+@enduml

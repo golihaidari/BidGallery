@@ -11,6 +11,7 @@ interface FormTemplateProps {
   error?: string;
   retry?: () => void;
   submitLabel?: string;
+  disableSubmit?: boolean; // <-- add this
 }
 
 const FormTemplate: React.FC<FormTemplateProps> = ({
@@ -20,6 +21,7 @@ const FormTemplate: React.FC<FormTemplateProps> = ({
   loading = false,
   error,
   submitLabel = "Submit",
+  disableSubmit = true
 }) => {
   return (
     <Box
@@ -62,7 +64,7 @@ const FormTemplate: React.FC<FormTemplateProps> = ({
           <GradientButton 
            type="submit"
            fullWidth sx={{ mt: 2 }}
-            disabled={loading}
+            disabled={loading || disableSubmit} // disable if loading or disabled is true
           >
             {loading ? <CircularProgress size={20} color="inherit" /> : submitLabel}
           </GradientButton>

@@ -1,5 +1,9 @@
-import { createContext, useContext, useState, useEffect } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
+import {API_URL} from "../config.tsx";
+import useFetch from "@hook/fetchData.tsx";
+
 
 interface AuthContextType {
   userEmail: string | null;
@@ -13,25 +17,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Optionally, you can call /auth/me to verify HttpOnly cookie and set user
-    fetch("/api/auth/me", { credentials: "include" })
-      .then(res => res.json())
-      .then(data => {
-        if (data.email) setUserEmail(data.email);
-      });
-  }, []);
-
   const login = (email: string) => {
     setUserEmail(email);
   };
 
+  const { sendRequest, error } = useFetch<{ success: boolean }>(`${API_URL}/api/auth/logout`);
   const logout = async () => {
-    await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include",
-    });
-    setUserEmail(null);
+    await sendRequest(
+      { method: "POST", credentials: "include" },
+      "Logout failed"
+    );
+
+    if (error) {
+      alert(error); // or show it in your UI
+      return; // stop clearing context if needed
+    }
+    setUserEmail(null); // clears context
+    console.log("Logout successful, context cleared");
   };
 
   return (

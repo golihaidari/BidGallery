@@ -1,0 +1,22 @@
+@startuml
+title Registration Use Case Activity Diagram
+
+start
+
+:Customer navigates to Registration page;
+:Enter required details (email, password, name, etc.);
+:Submit registration form to backend;
+
+:Backend validates data;
+if (Data valid?) then (yes)
+  :Create new user account;
+  :Generate JWT for session;
+  :Store JWT in AuthContext;
+  :Redirect to Product Page;
+else (no)
+  :Show error message;
+  :Allow retry or correct data;
+endif
+
+stop
+@enduml

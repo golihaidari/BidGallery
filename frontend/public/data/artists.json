@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "firstName": "Anna",
+    "lastName": "Larsen",
+    "bio": "Contemporary artist from Copenhagen.",
+    "style": "Contemporary",
+    "imageUrl": "https://picsum.photos/seed/artist1/400/400"
+  },
+  {
+    "id": 2,
+    "firstName": "Bjorn",
+    "lastName": "Hansen",
+    "bio": "Abstract painter focusing on colors",
+    "style": "Abstract",
+    "imageUrl": "https://picsum.photos/seed/artist2/400/400"
+  },
+  {
+    "id": 3,
+    "firstName": "Carl",
+    "lastName": "Nielsen",
+    "bio": "Sculptor working with mixed materials.",
+    "style": "Sculpture",
+    "imageUrl": "https://picsum.photos/seed/artist3/400/400"
+  },
+  {
+    "id": 4,
+    "firstName": "Noah",
+    "lastName": "Kristensen",
+    "bio": "Minimalist artist focusing on atmospheric landscapes.",
+    "style": "Minimalism",
+    "imageUrl": "https://picsum.photos/seed/artist4/400/400"
+  },
+  {
+    "id": 5,
+    "firstName": "Sofia",
+    "lastName": "Mortensen",
+    "bio": "Uses warm colors and texture to express inner reflections.",
+    "style": "Abstract",
+    "imageUrl": "https://picsum.photos/seed/artist5/400/400"
+  }
+]

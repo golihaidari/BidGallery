@@ -1,13 +1,16 @@
 type FormErrors = { [key: string]: string };
 
+// Generic type for form values
+export type FormValues = Record<string, string>;
+
 export default class FormValidator {
 
-  static validateField(name: string, value: string, form?: any): string {
+  static validateField(name: string, value: string, form?: FormValues): string {
     switch (name) {
       //---------Always required-------
       case "firstName":
       case "lastName":
-      case "street":
+      case "address1":
       case "city":
       case "postalCode":
       case "mobileNr":
@@ -46,7 +49,7 @@ export default class FormValidator {
     
   }
 
-  static validateAllFields(form: any): FormErrors {
+  static validateAllFields(form: FormValues): FormErrors {
     const errors: FormErrors = {};
     for (const key in form) {
       const error = FormValidator.validateField(key, form[key], form);

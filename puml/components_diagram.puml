@@ -1,0 +1,37 @@
+
+@startuml
+title Art Gallery Component Diagram (Provided/Required Interfaces)
+
+' --- Frontend component ---
+component "Frontend (React + Vite + TS)" as FE {
+  [UI] 
+}
+FE -right-> [Backend API] : requires
+FE -down-> [Payment API] : requires
+FE -up-> [OAuth Service] : requires
+
+' --- Backend component ---
+component "Backend (Java Jersey + Tomcat)" as BE {
+  [Auth Controller] 
+  [Order Controller] 
+  [Product Controller]
+  [Service Layer]
+  [Repository Layer]
+}
+BE -right-> [MariaDB] : requires
+BE -up-> [OAuth Service] : requires
+[Backend API] <-- BE : provides
+
+' --- External services ---
+component "Firebase OAuth" as OAuth {
+  [Token Verification]
+}
+component "Payment API (Pipedream Mock)" as Payment {
+  [Payment Intent]
+}
+database "MariaDB" as DB {
+  [Users, Artists, Products, Orders, Addresses]
+}
+
+@enduml
+\end{plantuml}

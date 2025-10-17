@@ -1,5 +1,4 @@
-// src/firebase.ts
-import { initializeApp } from "firebase/app";
+import {initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
@@ -8,5 +7,11 @@ const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+// Initialize Firebase only if it hasn’t been initialized already
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
+// Export Auth instance
+const auth = getAuth(app);
+
+export { app, auth };

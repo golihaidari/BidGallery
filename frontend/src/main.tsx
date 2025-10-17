@@ -8,6 +8,7 @@ import '../index.css';
 import Login from '@components/Login.tsx';
 import Register from '@components/Register.tsx';
 import Products from '@components/products/Products.tsx';
+import Artists from '@components/artists/Artists.tsx'
 import Bid from '@components/Bid.tsx';
 import Payment from '@components/payment/Payment.tsx';
 import ShippingAddress from '@components/ShippingAddress.tsx';
@@ -18,7 +19,6 @@ import CheckoutProvider from './context/CheckoutContext.tsx';
 import { AuthProvider } from '@context/AuthContext.tsx';
 import Cart from '@components/Cart.tsx';
 import Layout from '@components/navbar/Layout.tsx';
-import OrderSuccess from '@components/OrderSuccess.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -29,15 +29,14 @@ createRoot(document.getElementById('root')!).render(
             <Route element={<Layout />}>
               <Route path='/' element={<Products/>}/>                        
               <Route path='/giveBid' element={<Bid/>} />
+              <Route path='/artists' element={<Artists/>} />
             </Route>
               <Route path="/login" element={<Login/>}/>
               <Route path="/register" element={<Register/>}/> 
               <Route path='/cart' element={<Cart/>} />
               <Route path='/delivery' element={<ShippingAddress/>}/>
               <Route path='/payment' element={<Payment/>}/>
-              <Route path='/submit' element={<Submit/>}/> 
-              <Route path='/orderSuccess' element={<OrderSuccess/>}/>
-                      
+              <Route path='/submit' element={<Submit/>}/>                       
           </Routes>
         </BrowserRouter> 
       </CheckoutProvider>

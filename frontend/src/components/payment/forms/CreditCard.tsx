@@ -19,7 +19,7 @@ const initialPayment: CreditCard = {
   expiryYear: "25",
 };
 
-const submitUrl = "https://eobr8yycab7ojzy.m.pipedream.ne";
+const submitUrl = "https://eobr8yycab7ojzy.m.pipedream.net";
 
 const CreditCardForm = () => {
   const [payment, setPayment] = useState<CreditCard>(initialPayment);
@@ -72,6 +72,7 @@ const CreditCardForm = () => {
       error={apiError || ""}
       retry={() => setError("")}
       submitLabel="Confirm Payment"
+      disableSubmit={ !payment.cardHolder || !payment.cardNumber  || payment.cvcNumber.length < 3}
     >
       <TextField
         fullWidth

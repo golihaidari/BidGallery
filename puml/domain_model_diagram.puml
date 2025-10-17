@@ -1,0 +1,61 @@
+@startuml domain_model
+skinparam ranksep 3.5
+
+' -------------------
+' DOMAIN MODEL
+' -------------------
+
+class User {
+    - email : string
+    - password : string
+    - accountType : string
+}
+
+class Artist {
+    - firstName : string
+    - lastName : string
+    - bio : string
+    - style : string
+}
+
+class Product {
+    - title : string
+    - secretPrice : double
+    - currency : string
+    - imageUrl : string
+}
+
+class Address {
+    - firstName : string
+    - lastName : string
+    - email : string
+    - mobileNr : string
+    - country : string
+    - postalCode : string
+    - city : string
+    - address1 : string
+    - address2 : string
+}
+
+class Order {
+    - orderDate : date
+    - orderStatus : string
+    - price : double
+}
+
+class OrderItem {
+    - priceAtPurchase : double
+}
+
+' -------------------
+' RELATIONSHIPS
+' -------------------
+Artist -right-|> User : extends
+User "0..1" -right- "0..*" Order : places
+User "1" -- "0..*" Address : has
+Artist "1" -- "0..*" Product : creates
+Order "1" -- "1..*" OrderItem : contains
+OrderItem "1" -- "1" Product : references
+Order "1" -- "1" Address : shipsTo
+
+@enduml
