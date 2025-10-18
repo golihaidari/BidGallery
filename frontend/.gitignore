@@ -27,3 +27,5 @@ dist-ssr
 
 # frontend firebase enviroment varibale 
 .env
+
+firebase-service.json

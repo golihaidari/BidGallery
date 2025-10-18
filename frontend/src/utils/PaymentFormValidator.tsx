@@ -18,7 +18,7 @@ export default class PaymentFormValidator {
     if (!form.cardNumber?.trim()) {
       errors.cardNumber = "Card number is required";
     } else if (!/^\d{13,19}$/.test(form.cardNumber.replace(/\s+/g, ""))) {
-      errors.cardNumber = "Invalid card number";
+      errors.cardNumber = "Invalid card number, It should be 13-19 digits";
     }
 
     // Expiry month
@@ -39,7 +39,7 @@ export default class PaymentFormValidator {
     if (!form.cvcNumber?.trim()) {
       errors.cvcNumber = "CVC is required";
     } else if (!/^\d{3,4}$/.test(form.cvcNumber)) {
-      errors.cvcNumber = "Invalid CVC";
+      errors.cvcNumber = "Invalid CVC, It should be 3-4 digits";
     }
 
     // Cardholder name
@@ -57,7 +57,7 @@ export default class PaymentFormValidator {
         errors.giftCardnumber = "Gift card number is required";
     }
     else if (!/^[A-Z0-9]{8,20}$/i.test(form.giftCardnumber)) {
-      errors.giftCardnumber = "Invalid gift card number";
+      errors.giftCardnumber = "Invalid gift card number, It must be 8-20 characters";
     }
     if (!form.securityCode?.trim()) {
       errors.securityCode = "Gift card code is required";
@@ -71,7 +71,7 @@ export default class PaymentFormValidator {
     if (!f.phoneNumber?.trim()) {
       errors.phoneNumber = "Phone number is required";
     } else if (!/^\+?\d{10,15}$/.test(f.phoneNumber)) {
-      errors.phoneNumber = "Invalid phone number";
+      errors.phoneNumber = "Invalid phone number, It must be 10-15 digits";
     }
     return errors;
   }

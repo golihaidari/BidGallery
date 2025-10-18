@@ -17,18 +17,23 @@ const Cart: React.FC = () => {
   };
 
   const handleCheckout = () => {
-    navigate("/delivery");
+    if (state.cart.length === 0) {
+      navigate("/"); // go back to product list  if cart is empty
+    } else {
+      navigate("/delivery"); // proceed checkout
+    }
   };
 
   return (
     <FormTemplate title="Your Cart" 
-                  submitLabel="Proceed to Checkout" 
+                  submitLabel={state.cart.length === 0 ? "Go Back to Products" : "Proceed to Checkout"}
                   onSubmit={handleCheckout}
                   disableSubmit= {false}>
       {state.cart.length === 0 ? (
-        <Typography variant="body1" sx={{ mt: 2 }}>
-          Your cart is empty.
-        </Typography>
+        <Box sx={{ color: "error.main", fontWeight: "bold", textAlign: "center" }}>
+          Your cart is empty.<br />
+          Please select product first.
+        </Box>
       ) : (
         <Box>
           {state.cart.map((item) => (

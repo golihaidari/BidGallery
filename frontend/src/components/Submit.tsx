@@ -21,21 +21,26 @@ export default function Submit() {
     : "No address provided";
 
   const handlePlaceOrder = () => {
-    sendRequest(
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          cart: state.cart.map((item) => ({
-            productId: item.product.id,
-            bidPrice: item.bidPrice,
-          })),
-          address: state.address,
-          paymentIntentId: state.paymentIntentId,
-        }),
-      },
-      "Failed to submit order"
-    );
+    if (state.cart.length === 0) {
+      navigate("/"); // go back to product list  if cart is empty
+    } else {
+      // proceed checkout
+      sendRequest(
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cart: state.cart.map((item) => ({
+              productId: item.product.id,
+              bidPrice: item.bidPrice,
+            })),
+            address: state.address,
+            paymentIntentId: state.paymentIntentId,
+          }),
+        },
+        "Failed to submit order"
+      );
+    }
   };
 
   useEffect(() => {
@@ -81,7 +86,7 @@ export default function Submit() {
           title="Order Receipt"
           onSubmit={handlePlaceOrder}
           loading={isLoading}
-          submitLabel="Confirm Order"
+          submitLabel={state.cart.length === 0 ? "Go Back to Products" :"Confirm Order"}
           error={apiError}
           disableSubmit={false}
         >
@@ -95,7 +100,9 @@ export default function Submit() {
             }}
           >
             {state.cart.length === 0 ? (
-              <Box>No products in cart</Box>
+              <Box sx={{ color: "error.main", fontWeight: "bold", textAlign: "center" }}>
+                Your cart is empty, please select product first.
+              </Box>
             ) : (
               state.cart.map((item, index) => (
                 <Box
