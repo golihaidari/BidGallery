@@ -6,7 +6,7 @@ import giftCardIcon from "@assets/giftcardicon.png";
 import type { GiftCard } from "@interfaces/GiftCard";
 import { useCheckout } from "@context/CheckoutContext";
 import { createMockPaymentIntent } from "@utils/createMockPaymentIntent";
-import FormTemplate from "@utils/FormTemplate";
+import FormTemplate from "@components/common/FormTemplate";
 import PaymentFormValidator from "@utils/PaymentFormValidator";
 import type { PaymentErrors } from "@utils/PaymentFormValidator";
 

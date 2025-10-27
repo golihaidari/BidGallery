@@ -2,10 +2,12 @@ package dk.dtu.backend.controller;
 
 import dk.dtu.backend.persistence.entity.Artist;
 import dk.dtu.backend.dto.responses.ArtistDTO;
+import dk.dtu.backend.dto.responses.ProductDTO;
 import dk.dtu.backend.persistence.entity.AccountType;
 import dk.dtu.backend.security.Protected;
 import dk.dtu.backend.security.RoleProtected;
 import dk.dtu.backend.service.ArtistService;
+import dk.dtu.backend.service.MetricService;
 import dk.dtu.backend.utils.DtoMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/artists")
@@ -23,14 +26,27 @@ public class ArtistController {
     @Autowired
     private ArtistService artistService;
 
+    @Autowired
+    private MetricService metricService;
+
     // ------------------- READ ------------------------------
     // Get all artists 
     @GetMapping
     @Protected
     @RoleProtected(roles = {AccountType.ADMIN, AccountType.CUSTOMER})
     public ResponseEntity<List<ArtistDTO>> getAllArtists() {
-        List<Artist> artists = artistService.getAllArtists();
-        return ResponseEntity.ok(DtoMapper.toArtistDTOList(artists));
+        long startTime = System.currentTimeMillis();
+        String requestId = UUID.randomUUID().toString();
+
+        List<Artist> artists = artistService.getAllArtists(requestId);
+
+                // Map Product entities to ProductDTO
+        List<ArtistDTO> artistDTOs = DtoMapper.toArtistDTOList(artists);
+
+        long duration = System.currentTimeMillis() - startTime;
+
+        metricService.recordDuration("availableProducts.duration", duration, "success", "true");
+        return ResponseEntity.ok(artistDTOs);
     }
 
     // Get Single Artist 

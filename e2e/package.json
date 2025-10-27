@@ -1,0 +1,16 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "open": "cypress open",
+    "run": "cypress run"
+  },
+  "keywords": [],
+  "author": "Goli",
+  "license": "ISC",
+  "description": "this is the e2e test for the bidgallery project",
+  "devDependencies": {
+    "cypress": "^15.5.0"
+  }
+}

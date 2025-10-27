@@ -20,7 +20,7 @@ public class UserService {
     private LoggingService loggingService;
 
     // ----------------------------- CREATE -----------------------------
-    public boolean saveUser(User user) {
+    /*public boolean saveUser(User user) {
         try {
             userRepository.save(user);
             loggingService.info("User saved successfully", Map.of(
@@ -35,7 +35,7 @@ public class UserService {
             ));
             return false;
         }
-    }
+    }*/
 
     // ----------------------------- READ -----------------------------
     public Optional<User> getUserById(Integer id) {

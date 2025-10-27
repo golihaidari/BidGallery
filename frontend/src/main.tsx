@@ -7,8 +7,8 @@ import '../index.css';
 // Components
 import Login from '@components/Login.tsx';
 import Register from '@components/Register.tsx';
-import Products from '@components/products/Products.tsx';
-import Artists from '@components/artists/Artists.tsx'
+import Products from '@components/Products.tsx';
+import Artists from '@components/Artists.tsx'
 import Bid from '@components/Bid.tsx';
 import Payment from '@components/payment/Payment.tsx';
 import ShippingAddress from '@components/ShippingAddress.tsx';
@@ -18,7 +18,7 @@ import Submit from '@components/Submit.tsx';
 import CheckoutProvider from './context/CheckoutContext.tsx';
 import { AuthProvider } from '@context/AuthContext.tsx';
 import Cart from '@components/Cart.tsx';
-import Layout from '@components/navbar/Layout.tsx';
+import Layout from '@components/common/AppLayout.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

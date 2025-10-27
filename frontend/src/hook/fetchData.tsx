@@ -1,12 +1,5 @@
 import { useState } from "react";
 
-/**
- * A reusable custom React hook for sending HTTP requests (GET, POST, etc.)
- * with built-in loading, error, and status handling.
- *
- * @template T - The expected type of the response data
- * @param url - The API endpoint to send the request to
- */
 const useFetch = <T,>(url: string) => {
   // ----------------------------
   // State variables
@@ -16,11 +9,6 @@ const useFetch = <T,>(url: string) => {
   const [error, setError] = useState<string>("");  // Stores error message if any
   const [status, setStatus] = useState(0);         // HTTP status code of the response
 
-  /**
-   * Sends an HTTP request to the provided `url`.
-   * @param options - Standard fetch options (method, headers, body, etc.)
-   * @param fallbackErrorMessage - Optional fallback message if the server gives no message
-   */
   async function sendRequest(options?: RequestInit, fallbackErrorMessage?: string) {
     setIsLoading(true);
     setError("");
@@ -30,7 +18,6 @@ const useFetch = <T,>(url: string) => {
       const response = await fetch(url, { ...options, mode: "cors" });
       setStatus(response.status);
 
-      // --- Try to parse JSON safely ---
       // If the response body is empty, JSON.parse() will throw, so we catch and return {}
       const resData:any = await response.json().catch(() => ({}));
 
@@ -60,7 +47,7 @@ const useFetch = <T,>(url: string) => {
     }
   }
 
-   // NEW: Reset all state
+   // Reset all state
   const reset = () => {
     setData(undefined);
     setError("");
@@ -68,7 +55,7 @@ const useFetch = <T,>(url: string) => {
     setIsLoading(false);
   };
 
-  // Return all state and functions so they can be used in any component
+  // Return all states
   return { sendRequest, setError, status, data, isLoading, error, reset };
 };
 

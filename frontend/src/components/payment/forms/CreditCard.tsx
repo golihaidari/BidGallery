@@ -7,7 +7,7 @@ import usePostData from "@hook/fetchData";
 import type { CreditCard } from "@interfaces/CreditCard";
 import { useCheckout } from "@context/CheckoutContext";
 import { createMockPaymentIntent } from "@utils/createMockPaymentIntent";
-import FormTemplate from "@utils/FormTemplate";
+import FormTemplate from "@components/common/FormTemplate";
 import PaymentFormValidator from "@utils/PaymentFormValidator";
 import type { PaymentErrors } from "@utils/PaymentFormValidator";
 

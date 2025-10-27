@@ -66,6 +66,34 @@ public class AddressService {
         return addresses;
     }
 
+    public Optional<Address> getUserAddress(int userId, String requestId) {
+        Optional<Address> address = addressRepository.findByUserId(userId);
+        
+        if (address.isPresent()) {
+            loggingService.info("Fetched the user address", Map.of(
+                "Address Id", String.valueOf(address.get().getId()),
+                "requestId", requestId
+            ));
+        } else {
+            loggingService.info("No address found for user", Map.of(
+                "userId", String.valueOf(userId),
+                "requestId", requestId
+            ));
+        }
+        
+        return address;
+    }
+
+    /*
+    public Optional<Address> getUserAddress(int userId, String requestId) {
+        Optional<Address> address = addressRepository.findByUserId(userId);
+        loggingService.info("Fetched the user addresse", Map.of(
+            "Address Id", String.valueOf(address.get().getId()),
+            "requestId", requestId
+        ));
+        return address;
+    }*/
+
     public Optional<Address> findByAddressFields(String address1, String city, String postalCode) {
         Optional<Address> addressOpt = addressRepository.findByAddress1AndCityAndPostalCode(address1, city, postalCode);
         loggingService.info("Checked address existence by fields", Map.of(

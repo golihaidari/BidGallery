@@ -2,13 +2,20 @@ package dk.dtu.backend.controller;
 
 import dk.dtu.backend.dto.LoginRequestFirebase;
 import dk.dtu.backend.dto.RegisterRequest;
+import dk.dtu.backend.dto.responses.AddressDTO;
+import dk.dtu.backend.persistence.entity.AccountType;
 import dk.dtu.backend.persistence.entity.Address;
 import dk.dtu.backend.persistence.entity.Artist;
 import dk.dtu.backend.persistence.entity.User;
+import dk.dtu.backend.security.Protected;
+import dk.dtu.backend.security.RoleProtected;
+import dk.dtu.backend.service.AddressService;
 import dk.dtu.backend.service.AuthService;
 import dk.dtu.backend.service.MetricService;
 import dk.dtu.backend.utils.CookieUtil;
+import dk.dtu.backend.utils.DtoMapper;
 import dk.dtu.backend.utils.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -25,6 +32,9 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired 
+    private AddressService addressService;
 
     @Autowired
     private MetricService metricService;
@@ -58,6 +68,30 @@ public class AuthController {
         }
 
         // Link Artist / Address if provided
+        if(user.getAccountType() == AccountType.ARTIST){
+            if (artist == null){
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "error", "Artist fields are required",
+                    "requestId", requestId
+                ));
+            }
+            artist.setUser(user);
+            user.setArtist(artist);
+        }
+        else if(user.getAccountType()== AccountType.CUSTOMER){
+            if (address == null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "error", "address fields are required",
+                    "requestId", requestId
+                ));
+            }
+            address.setUser(user);
+            user.setAddresses(List.of(address));
+        }
+
+        /*
         if (artist != null) {
             artist.setUser(user);
             user.setArtist(artist);
@@ -65,7 +99,7 @@ public class AuthController {
         if (address != null) {
             address.setUser(user);
             user.setAddresses(List.of(address));
-        }
+        }*/
 
         // Save user (service handles logging internally)
         boolean success = authService.register(user, requestId);
@@ -92,6 +126,48 @@ public class AuthController {
                         "email", user.getEmail(),
                         "requestId", requestId
                 ));
+    }
+
+    //------------------------------retrive address for the registered users----------------------
+    @GetMapping("/address")
+    @Protected
+    @RoleProtected(roles = {AccountType.CUSTOMER})
+    public ResponseEntity<?> getMyAddress(HttpServletRequest request) {
+
+        long startTime = System.currentTimeMillis();
+        String requestId = UUID.randomUUID().toString();
+
+        // Extract token from HttpOnly cookie
+        String token = authService.getTokenFromRequest(request);
+
+        if (token == null) {
+            metricService.incrementCounter("No token found, authentication", "success", "false");
+            return ResponseEntity.status(401).body("No token found");            
+        }
+
+        // Identify user using your AuthService
+        Optional<User> userOpt = authService.getUserFromToken(token);
+        if (userOpt.isEmpty()) {
+            metricService.incrementCounter("Invalid token, authentication", "success", "false");
+            return ResponseEntity.status(402).body("Invalid token");
+        }
+
+        User user = userOpt.get();
+
+        // Fetch address by user ID
+        Optional<Address> addressOpt = addressService.getUserAddress(user.getId(), requestId);
+
+        if(addressOpt.isEmpty()){
+            metricService.incrementCounter("Address", "success", "false");
+            return ResponseEntity.status(403).body("No address found");
+        }
+        // Map to DTO and return
+        AddressDTO addressDTO = DtoMapper.toAddressDTO(addressOpt.get());
+
+        long duration = System.currentTimeMillis() - startTime;
+        metricService.recordDuration("address.duration", duration, "success", "true");
+
+        return ResponseEntity.ok(Map.of("address", addressDTO));
     }
 
     // -----------------------------EMAIL/PASSWORD LOGIN-----------------------------
@@ -192,4 +268,6 @@ public class AuthController {
         String regex = "^[A-Za-z0-9+_.-]+@(.+)$";
         return Pattern.compile(regex).matcher(email).matches();
     }
+
+    
 }

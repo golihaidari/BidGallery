@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { TextField, Typography, Button, Box } from "@mui/material";
 import { useAuth } from "@context/AuthContext.tsx";
 import useFetch from "@hook/fetchData";
-import FormTemplate from "@utils/FormTemplate";
+import FormTemplate from "@components/common/FormTemplate.tsx";
 import FormValidator from "@utils/UserFormValidator";
 
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
@@ -114,7 +114,7 @@ export default function Login() {
       onSubmit={(e) => { e.preventDefault(); handleLogin(); }}
       loading={loginLoading || googleLoading}
       error={apiError || loginError || googleError || ""}
-      submitLabel="Log in"
+      submitLabel="Login"
       disableSubmit={!email || !password}
     >
       <Button
@@ -134,6 +134,7 @@ export default function Login() {
         <TextField
           fullWidth
           label="Email"
+          type ="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onBlur={() => setErrors({ ...errors, email: FormValidator.validateField("email", email) })}

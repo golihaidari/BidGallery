@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Box, Card } from "@mui/material";
-import PaymentOptions from "./Options";
+import PaymentOptions from "./PaymentOptions";
 import CreditCardForm from "./forms/CreditCard";
 import MobilePayForm from "./forms/MobilePay";
 import GiftCardForm from "./forms/GiftCard";
 import { PaymentType } from "./PaymentType";
-import "./Payment.css";
+import "@components/extraCss/Payment.css";
 
 const Payment = () => {
   const [paymentType, setPaymentType] = useState<string>(PaymentType.creditCard);

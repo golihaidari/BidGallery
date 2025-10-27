@@ -1,8 +1,10 @@
 package dk.dtu.backend.utils;
 
 import dk.dtu.backend.dto.responses.ProductDTO;
+import dk.dtu.backend.dto.responses.AddressDTO;
 import dk.dtu.backend.dto.responses.ArtistDTO;
 import dk.dtu.backend.persistence.entity.Product;
+import dk.dtu.backend.persistence.entity.Address;
 import dk.dtu.backend.persistence.entity.Artist;
 
 import java.util.List;
@@ -54,6 +56,30 @@ public class DtoMapper {
     public static List<ArtistDTO> toArtistDTOList(List<Artist> artists) {
         return artists.stream()
                 .map(DtoMapper::toArtistDTO)
+                .collect(Collectors.toList());
+    }
+
+    // -------------------- ADDRESS --------------------
+    public static AddressDTO toAddressDTO(Address address) {
+        AddressDTO dto = new AddressDTO();
+        dto.setId(address.getId());
+        dto.setUserId(address.getUser() != null ? address.getUser().getId() : null);
+        dto.setFirstName(address.getFirstName());
+        dto.setLastName(address.getLastName());
+        dto.setEmail(address.getEmail());
+        dto.setMobileNr(address.getMobileNr());
+        dto.setCountry(address.getCountry());
+        dto.setPostalCode(address.getPostalCode());
+        dto.setCity(address.getCity());
+        dto.setAddress1(address.getAddress1());
+        dto.setAddress2(address.getAddress2());
+        return dto;
+    }
+
+
+    public static List<AddressDTO> toAddressDTOList(List<Address> addresses) {
+        return addresses.stream()
+                .map(DtoMapper::toAddressDTO)
                 .collect(Collectors.toList());
     }
 }

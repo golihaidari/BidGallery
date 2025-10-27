@@ -8,9 +8,9 @@ import mobilepayImg from "@assets/mobilepayicon.svg";
 import type { MobilePay } from "@interfaces/MobilePay";
 import { createMockPaymentIntent } from "@utils/createMockPaymentIntent";
 import { useCheckout } from "@context/CheckoutContext";
-import FormTemplate from "@utils/FormTemplate";
+import FormTemplate from "@components/common/FormTemplate";
 import PaymentFormValidator from "@utils/PaymentFormValidator";
-import "../Payment.css"
+import "@components/extraCss/Payment.css"
 
 const submitUrl = "https://eobr8yycab7ojzy.m.pipedream.net";
 

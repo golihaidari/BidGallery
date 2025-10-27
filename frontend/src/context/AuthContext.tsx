@@ -3,15 +3,7 @@ import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 import {API_URL} from "../config.tsx";
 import useFetch from "@hook/fetchData.tsx";
-
-
-interface AuthContextType {
-  userEmail: string | null;
-  login: (email: string) => void;
-  logout: () => void;
-  isAuthenticated: boolean;
-}
-
+import type {AuthContextType} from "@interfaces/AuthContextType.tsx";
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {

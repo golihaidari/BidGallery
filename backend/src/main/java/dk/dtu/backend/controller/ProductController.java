@@ -5,6 +5,7 @@ import dk.dtu.backend.dto.responses.ProductDTO;
 import dk.dtu.backend.persistence.entity.AccountType;
 import dk.dtu.backend.security.Protected;
 import dk.dtu.backend.security.RoleProtected;
+import dk.dtu.backend.service.MetricService;
 import dk.dtu.backend.service.ProductService;
 import dk.dtu.backend.utils.DtoMapper;
 
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/products")
@@ -21,6 +23,9 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private MetricService metricService;
 
     // ----------------------------CREATE ------------------------------
    @PostMapping
@@ -71,10 +76,16 @@ public class ProductController {
     // Get available products
     @GetMapping("/available")
     public ResponseEntity<List<ProductDTO>> getAvailableProducts() {
-        List<Product> products = productService.getAvailableProducts(); // assuming this returns only available ones
+        long startTime = System.currentTimeMillis();
+        String requestId = UUID.randomUUID().toString();
+
+        List<Product> products = productService.getAvailableProducts(requestId); 
 
         // Map Product entities to ProductDTO
         List<ProductDTO> productDTOs = DtoMapper.toProductDTOList(products);
+
+        long duration = System.currentTimeMillis() - startTime;
+        metricService.recordDuration("availableProducts.duration", duration, "success", "true");
 
         return ResponseEntity.ok(productDTOs);
     }

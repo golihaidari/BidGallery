@@ -62,10 +62,11 @@ public class ProductService {
         return products;
     }
 
-    public List<Product> getAvailableProducts() {
+    public List<Product> getAvailableProducts(String requestId) {
         List<Product> products = productRepository.findBySoldFalse();
         loggingService.info("Fetched available products", Map.of(
-            "count", String.valueOf(products.size())
+            "count", String.valueOf(products.size()),
+            "requestId", requestId
         ));
         return products;
     }

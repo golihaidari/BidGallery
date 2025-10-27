@@ -3,13 +3,14 @@ import { Box, TextField } from "@mui/material";
 import { useCheckout } from "@context/CheckoutContext";
 import { useNavigate } from "react-router-dom";
 import useFetch from "@hook/fetchData";
-import FormTemplate from "@utils/FormTemplate";
-import InfoCard from "@components/InfoCard";
+import FormTemplate from "@components/common/FormTemplate";
+import InfoCard from "@components/cards/InfoCard";
+import { API_URL } from "../config";
 export default function Submit() {
   const { state, dispatch } = useCheckout();
   const navigate = useNavigate();
   const { sendRequest, data, error: apiError, isLoading, status, reset } = useFetch<any>(
-    "http://localhost:8080/api/checkout/placeorder"
+    `${API_URL}/api/checkout/placeorder`
   );
 
   const [showResultCard, setShowResultCard] = useState(false);
@@ -28,6 +29,7 @@ export default function Submit() {
       sendRequest(
         {
           method: "POST",
+          credentials: "include", 
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             cart: state.cart.map((item) => ({
@@ -63,7 +65,7 @@ export default function Submit() {
     <>
       {showResultCard ? (
         <InfoCard
-          title={resultType === "success" ? "Order Placed!" : "Submission Failed"}
+          title={resultType === "success" ? "Success!" : "Error!"}
           message={resultMessage}
           type={resultType}
           firstBtnLabel={resultType === "success" ? "Continue Shopping" : "Retry"}

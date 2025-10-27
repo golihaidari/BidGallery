@@ -1,6 +1,7 @@
 package dk.dtu.backend.controller;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +16,14 @@ import dk.dtu.backend.dto.CheckoutRequest;
 import dk.dtu.backend.persistence.entity.AccountType;
 import dk.dtu.backend.persistence.entity.Order;
 import dk.dtu.backend.persistence.entity.Product;
+import dk.dtu.backend.persistence.entity.User;
 import dk.dtu.backend.security.Protected;
 import dk.dtu.backend.security.RoleProtected;
+import dk.dtu.backend.service.AuthService;
 import dk.dtu.backend.service.MetricService;
 import dk.dtu.backend.service.OrderService;
 import dk.dtu.backend.service.ProductService;
-import dk.dtu.backend.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/checkout")
@@ -33,7 +36,7 @@ public class CheckoutController {
     private ProductService productService;
 
     @Autowired
-    private UserService userService;
+    private AuthService authService;
 
     @Autowired
     private MetricService metricService;
@@ -92,10 +95,21 @@ public class CheckoutController {
     // ----------------------------- Place order -----------------------------
     @PostMapping("/placeorder")
     public ResponseEntity<?> placeOrder(@RequestBody CheckoutRequest request,
-                                        @RequestHeader(value = "X-User-Email", required = false) String email) {
+                                            HttpServletRequest httpRequest) {
 
         long startTime = System.currentTimeMillis();
         String requestId = UUID.randomUUID().toString();
+
+        // Extract token from cookies
+        String token = authService.getTokenFromRequest(httpRequest);
+
+        User user = null;
+        if (token != null) {
+            Optional<User> userOpt = authService.getUserFromToken(token);
+            if (!userOpt.isEmpty()) {
+                user = userOpt.get();
+            }
+        }
 
         if (request.getCart() == null || request.getCart().isEmpty() || request.getAddress() == null ||
             request.getPaymentIntentId() == null || request.getPaymentIntentId().isBlank()) {
@@ -107,15 +121,13 @@ public class CheckoutController {
             ));
         }
 
-        var user = (email != null) ? userService.getUserByEmail(email).orElse(null) : null;
-
         try {
             Order savedOrder = orderService.placeOrder(
                     user,
                     request.getCart(),
                     request.getAddress(),
                     request.getPaymentIntentId(),
-                    email,
+                    request.getAddress().getEmail(),
                     requestId
             );
 
@@ -125,7 +137,7 @@ public class CheckoutController {
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
-                    "message", "OrderId"+savedOrder.getId()+" placed successfully"
+                    "message", "OrderId "+savedOrder.getId()+" placed successfully."
             ));
 
         } catch (IllegalArgumentException e) {

@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type UserConfig as ViteUserConfig  } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'url';
 
@@ -14,5 +14,10 @@ export default defineConfig({
       '@hook': fileURLToPath(new URL('./src/hook', import.meta.url)),
       '@utils': fileURLToPath(new URL('./src/utils', import.meta.url))
     }
+  },
+  test: { //this allows to use describe, it, and expect without imports and simulates a browser.
+    globals: true,            // allows describe, it, expect globally
+    environment: 'jsdom',     // simulate a browser
+    setupFiles: './tests/setup.tsx', // optional setup file
   }
-})
+}as ViteUserConfig)

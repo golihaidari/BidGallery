@@ -8,12 +8,15 @@ import dk.dtu.backend.persistence.entity.User;
 import dk.dtu.backend.persistence.entity.AccountType;
 import dk.dtu.backend.persistence.repository.UserRepository;
 import dk.dtu.backend.utils.JwtUtil;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
@@ -157,4 +160,15 @@ public class AuthService {
 
         return userRepository.findByEmail(email);
     }
+
+    // Extract token from JWT in HttpServletRequest
+    public String getTokenFromRequest(HttpServletRequest request) {
+        String token = Arrays.stream(Optional.ofNullable(request.getCookies()).orElse(new Cookie[0]))
+                .filter(c -> "jwt".equals(c.getName()))
+                .map(Cookie::getValue)
+                .findFirst()
+                .orElse(null);
+        return token;
+    }
+
 }

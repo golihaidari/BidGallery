@@ -1,8 +1,8 @@
 import React from "react";
 import { Box, Typography, Divider } from "@mui/material";
 import { useCheckout } from "@context/CheckoutContext";
-import GradientButton from "@utils/GradientButton";
-import FormTemplate from "@utils/FormTemplate";
+import GradientButton from "@components/common/GradientButton";
+import FormTemplate from "@components/common/FormTemplate";
 import { useNavigate } from "react-router-dom";
 
 const Cart: React.FC = () => {
@@ -39,6 +39,7 @@ const Cart: React.FC = () => {
           {state.cart.map((item) => (
             <Box
               key={item.product.id}
+              data-id="cart-item"
               sx={{
                 display: "flex",
                 alignItems: "center",

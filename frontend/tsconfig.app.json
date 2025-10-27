@@ -34,5 +34,9 @@
       "@utils/*": ["utils/*"]   
     }
   },
-  "include": ["src"]
+  "include": ["src", 
+              "tests/setup.tsx",    
+              "tests/unit/*.tsx", 
+              "tests/integration/*.tsx"         
+            ]
 }

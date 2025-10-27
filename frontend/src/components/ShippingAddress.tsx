@@ -1,19 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, TextField, Autocomplete } from "@mui/material";
 import countries from "world-countries";
 import { useCheckout } from "@context/CheckoutContext";
 import type { Address } from "@interfaces/Address";
-import FormTemplate from "@utils/FormTemplate";
-import FormValidator, {type FormValues} from "@utils/UserFormValidator";
+import FormTemplate from "@components/common/FormTemplate.tsx";
+import FormValidator, { type FormValues } from "@utils/UserFormValidator";
 import { useNavigate } from "react-router-dom";
+import useFetch from "@hook/fetchData";
+import { API_URL } from "../config.tsx";
+import { useAuth } from "@context/AuthContext.tsx";
 
 // Sorted country list
 const countryList = countries.map((c) => c.name.common).sort();
 
 export default function ShippingAddress() {
   const { dispatch, state } = useCheckout();
-
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const [address, setAddress] = useState<Address>(
     state.address || {
@@ -21,7 +24,7 @@ export default function ShippingAddress() {
       lastName: "",
       email: "",
       mobileNr: "",
-      country: "Denmark ",
+      country: "Denmark",
       postalCode: "",
       city: "",
       address1: "",
@@ -31,18 +34,45 @@ export default function ShippingAddress() {
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
+  // --- useFetch hook for user data ---
+  const { sendRequest, data: userData, error } =
+    useFetch<{ address?: Address }>(`${API_URL}/api/auth/address`);
+
+  // --- Automatically load address if user is logged in ---
+  useEffect(() => {
+    console.log("isAuthenticated?:", isAuthenticated);
+    if(isAuthenticated){
+      sendRequest({ 
+        method: "GET",
+        credentials: "include", 
+      });
+    }
+  }, [isAuthenticated]);
+
+  // --- Update form when server returns user address ---
+  useEffect(() => {
+    console.log("User data from API:", userData);
+    if (userData?.address) {
+      setAddress(userData.address);
+    }
+  }, [userData]);
+
+  // --- Handle form field changes ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setAddress((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" })); // clear error on change
   };
 
+  // --- Validate on blur ---
   const onBlur = (field: keyof Address) => (e: React.FocusEvent<HTMLInputElement>) => {
     const error = FormValidator.validateField(field, e.target.value, address as unknown as FormValues);
     setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
+  // --- Submit form ---
   const handleSubmit = () => {
+    // Validate all required fields
     const fieldErrors: { [key: string]: string } = {
       firstName: FormValidator.validateField("firstName", address.firstName),
       lastName: FormValidator.validateField("lastName", address.lastName),
@@ -54,9 +84,9 @@ export default function ShippingAddress() {
     };
 
     setErrors(fieldErrors);
+    if (Object.values(fieldErrors).some(Boolean)) return; // stop if validation fails
 
-    if (Object.values(fieldErrors).some(Boolean)) return; // stop if any error
-
+    // Save address in checkout context
     dispatch({ type: "SET_ADDRESS", address });
     navigate("/payment");
   };
@@ -65,18 +95,20 @@ export default function ShippingAddress() {
     <FormTemplate
       title="Shipping Address"
       onSubmit={handleSubmit}
-      error="" // this page does not send data to api, so there is no api error.
+      error={error || ""}
       submitLabel="Next"
-      disableSubmit ={!address.firstName ||
-                      !address.lastName ||
-                      !address.email ||
-                      !address.mobileNr ||
-                      !address.country ||
-                      !address.postalCode ||
-                      !address.city ||
-                      
-                      !address.address1}
+      disableSubmit={
+        !address.firstName ||
+        !address.lastName ||
+        !address.email ||
+        !address.mobileNr ||
+        !address.country ||
+        !address.postalCode ||
+        !address.city ||
+        !address.address1
+      }
     >
+      {/* Grid layout for form fields */}
       <Box
         sx={{
           display: "grid",
@@ -124,25 +156,27 @@ export default function ShippingAddress() {
           helperText={errors.mobileNr}
           fullWidth
         />
+
         <Autocomplete
-          freeSolo //to allow custom input
+          freeSolo
           options={countryList}
           value={address.country}
-          onChange={(_, value) =>
-            setAddress((prev) => ({ ...prev, country: value || "" }))
-          }
-          renderInput={(params) => <TextField {...params} 
-                                      label="Country" 
-                                      fullWidth 
-                                      error={!!errors.country}
-                                      helperText={errors.country}
-                                      onBlur={() => {
-                                        if (!address.country || address.country.trim() === "") {
-                                          setErrors((prev) => ({ ...prev, country: "Country is required" }));
-                                        }
-                                      }}
-                                    />
-          }
+          onChange={(_, value) => setAddress((prev) => ({ ...prev, country: value || "" }))}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Country"
+              name="country"
+              fullWidth
+              error={!!errors.country}
+              helperText={errors.country}
+              onBlur={() => {
+                if (!address.country || address.country.trim() === "") {
+                  setErrors((prev) => ({ ...prev, country: "Country is required" }));
+                }
+              }}
+            />
+          )}
         />
 
         <TextField
@@ -166,7 +200,7 @@ export default function ShippingAddress() {
           fullWidth
         />
         <TextField
-          label="Address1"
+          label="Address 1"
           name="address1"
           value={address.address1}
           onChange={handleChange}
@@ -176,7 +210,7 @@ export default function ShippingAddress() {
           fullWidth
         />
         <TextField
-          label="Address Line 2 (optional)"
+          label="Address 2 (optional)"
           name="address2"
           value={address.address2}
           onChange={handleChange}

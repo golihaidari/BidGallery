@@ -1,0 +1,136 @@
+package dk.dtu.backend.unit;
+
+import dk.dtu.backend.TestDataFactory;
+import dk.dtu.backend.dto.CartItemDTO;
+import dk.dtu.backend.persistence.entity.*;
+import dk.dtu.backend.service.*;
+import dk.dtu.backend.persistence.repository.OrderRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class OrderServiceTest {
+
+    @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
+    private AddressService addressService;
+
+    @Mock
+    private ProductService productService;
+
+    @Mock
+    private PaymentService paymentService;
+
+    @Mock
+    private LoggingService loggingService;
+
+    @InjectMocks
+    private OrderService orderService;
+
+    private User customer;
+    private Address address;
+    private User artistUser;
+    private Artist artist;
+    private Product availableProduct;
+    private List<CartItemDTO> validCart;
+    private List<CartItemDTO> invalidCart;
+
+    @BeforeEach
+    public void setup() {
+        // Create test data once for all tests
+        customer = TestDataFactory.createUser("customer@example.com", AccountType.CUSTOMER);
+        address = TestDataFactory.createAddress();
+        
+        artistUser = TestDataFactory.createUser("artist@example.com", AccountType.ARTIST);
+        artist = TestDataFactory.createArtist(artistUser);
+        availableProduct = TestDataFactory.createProductWithId(1, artist, 500.0);
+        
+        validCart = TestDataFactory.createCartWithOneItem(1, 600.0);
+        invalidCart = TestDataFactory.createCartWithOneItem(999, 600.0); // Non-existent product
+    }
+
+    // =========================================================================
+    // METHODS USED BY CheckoutController ONLY
+    // =========================================================================
+
+    @Test
+    public void placeOrder_ValidOrder_ReturnsOrder() {
+        // Arrange
+        when(paymentService.validatePayment("valid-payment")).thenReturn(true);
+        when(addressService.findByAddressFields(any(), any(), any())).thenReturn(Optional.empty());
+        when(addressService.saveAddress(any())).thenReturn(address);
+        when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(productService.getProductById(1)).thenReturn(Optional.of(availableProduct));
+
+        // Act
+        Order result = orderService.placeOrder(
+            customer, 
+            validCart, 
+            address, 
+            "valid-payment", 
+            customer.getEmail(), 
+            "req123"
+        );
+
+        // Assert
+        assertNotNull(result);
+        verify(loggingService).info(eq("Order completed successfully"), anyMap());
+    }
+
+    @Test
+    public void placeOrder_PaymentValidationFails_ThrowsException() {
+        // Arrange
+        when(paymentService.validatePayment("invalid-payment")).thenReturn(false);
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            orderService.placeOrder(
+                customer, 
+                validCart, 
+                address, 
+                "invalid-payment", 
+                customer.getEmail(), 
+                "req123"
+            );
+        });
+        
+        verify(loggingService).warn(eq("Payment validation failed"), anyMap());
+    }
+
+    @Test
+    public void placeOrder_ProductNotFound_ThrowsException() {
+        // Arrange
+        when(paymentService.validatePayment("valid-payment")).thenReturn(true);
+        when(addressService.findByAddressFields(any(), any(), any())).thenReturn(Optional.empty());
+        when(addressService.saveAddress(any())).thenReturn(address);
+        when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(productService.getProductById(999)).thenReturn(Optional.empty()); // Product not found
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            orderService.placeOrder(
+                customer, 
+                invalidCart, 
+                address, 
+                "valid-payment", 
+                customer.getEmail(), 
+                "req123"
+            );
+        });
+        
+        verify(loggingService).error(eq("Product not found while placing order"), anyMap());
+    }
+}

@@ -1,17 +1,26 @@
 package dk.dtu.backend.controller;
 
 import dk.dtu.backend.persistence.entity.User;
+import dk.dtu.backend.dto.responses.AddressDTO;
 import dk.dtu.backend.persistence.entity.AccountType;
+import dk.dtu.backend.persistence.entity.Address;
 import dk.dtu.backend.security.Protected;
 import dk.dtu.backend.security.RoleProtected;
+import dk.dtu.backend.service.AddressService;
+import dk.dtu.backend.service.AuthService;
+import dk.dtu.backend.service.MetricService;
 import dk.dtu.backend.service.UserService;
+import dk.dtu.backend.utils.DtoMapper;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
@@ -19,6 +28,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    AuthService authService;
 
     //// ----------------------------READ------------------------------
     // Admin can get all users
@@ -34,6 +46,7 @@ public class UserController {
     @Protected
     @RoleProtected(roles = {AccountType.ADMIN})
     public ResponseEntity<?> getUser(@PathVariable String email) {
+
         Optional<User> user = userService.getUserByEmail(email);
         return user.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

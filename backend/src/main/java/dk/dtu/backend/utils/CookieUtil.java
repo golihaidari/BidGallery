@@ -12,7 +12,7 @@ public class CookieUtil {
                 .path("/")
                 .maxAge(COOKIE_MAX_AGE)
                 .secure(false)     // set true if HTTPS
-                .sameSite("Strict")
+                .sameSite("Lax") //Strict 
                 .build();
     }
 
@@ -22,7 +22,7 @@ public class CookieUtil {
                 .path("/")
                 .maxAge(0)
                 .secure(false)
-                .sameSite("Strict")
+                .sameSite("Lax")//Strict
                 .build();
     }
 }

@@ -11,6 +11,8 @@ public interface AddressRepository extends JpaRepository<Address, Integer> {
     // Get all addresses of a specific user
     List<Address> findByUser(User user);
 
+    Optional<Address> findByUserId(int userId);
+
     // Used for logged-in users
     Optional<Address> findByUserAndAddress1AndCityAndPostalCode(User user, String address1, String city, String postalCode);
 

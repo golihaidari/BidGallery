@@ -4,7 +4,7 @@ import { TextField, MenuItem, Box, Autocomplete } from "@mui/material";
 import countries from "world-countries";
 import usePostData from "@hook/fetchData";
 import { useAuth } from "@context/AuthContext.tsx";
-import FormTemplate from "@utils/FormTemplate";
+import FormTemplate from "@components/common/FormTemplate.tsx";
 import FormValidator from "@utils/UserFormValidator";
 import type { User } from "@interfaces/User.tsx";
 import type { Artist } from "@interfaces/Artist";
@@ -56,20 +56,9 @@ export default function Register() {
 
   const handleSignUp = () => {
     const fieldsToValidate =
-      form.accountType === "artist"
+      form.accountType === "artist" 
         ? ["firstName", "lastName", "email", "password", "rePassword", "bio", "style"]
-        : [
-            "firstName",
-            "lastName",
-            "email",
-            "password",
-            "rePassword",
-            "mobileNr",
-            "country",
-            "postalCode",
-            "city",
-            "address1",
-          ];
+        : [ "firstName", "lastName", "email", "password", "rePassword", "mobileNr", "country","postalCode","city","address1"];
 
     const newErrors: { [key: string]: string } = {};
     fieldsToValidate.forEach((field) => {
@@ -118,9 +107,9 @@ export default function Register() {
 
     const options: RequestInit = {
       method: "POST",
+      mode: "cors",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-      mode: "cors",
     };
 
     sendRequest(options, "Registration failed. Please try again.");
@@ -129,7 +118,7 @@ export default function Register() {
   useEffect(() => {
     if (status === 200 && data?.success) {
       login(form.email);
-      navigate("/");
+      navigate("/login");
     }
   }, [status, data, login, form.email, navigate]);
 

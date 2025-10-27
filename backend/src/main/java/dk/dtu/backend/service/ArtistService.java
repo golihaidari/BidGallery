@@ -61,10 +61,11 @@ public class ArtistService {
         return artistOpt;
     }
 
-    public List<Artist> getAllArtists() {
+    public List<Artist> getAllArtists(String requestId) {
         List<Artist> artists = artistRepository.findAll();
         loggingService.info("Fetched all artists", Map.of(
-            "count", String.valueOf(artists.size())
+            "count", String.valueOf(artists.size()),
+            "requestId", requestId         
         ));
         return artists;
     }

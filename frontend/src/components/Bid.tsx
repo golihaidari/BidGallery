@@ -3,9 +3,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Box, Typography, TextField } from "@mui/material";
 import useFetch from "@hook/fetchData";
 import { useCheckout } from "@context/CheckoutContext";
-import FormTemplate from "@utils/FormTemplate";
+import FormTemplate from "@components/common/FormTemplate.tsx";
 import FormValidator from "@utils/UserFormValidator";
-import InfoCard from "@components/InfoCard"; 
+import InfoCard from "@components/cards/InfoCard.tsx"; 
 import { API_URL } from "../config.tsx";
 
 const submitUrl = `${API_URL}/api/checkout/placebid`;
