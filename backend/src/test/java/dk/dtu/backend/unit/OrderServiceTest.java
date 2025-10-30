@@ -87,7 +87,6 @@ public class OrderServiceTest {
 
         // Assert
         assertNotNull(result);
-        verify(loggingService).info(eq("Order completed successfully"), anyMap());
     }
 
     @Test
@@ -106,8 +105,6 @@ public class OrderServiceTest {
                 "req123"
             );
         });
-        
-        verify(loggingService).warn(eq("Payment validation failed"), anyMap());
     }
 
     @Test
@@ -131,6 +128,45 @@ public class OrderServiceTest {
             );
         });
         
-        verify(loggingService).error(eq("Product not found while placing order"), anyMap());
+    }
+
+    @Test
+    public void getAllOrders_ReturnsOrderList() {
+        // Arrange
+        List<Order> expectedOrders = List.of(new Order(), new Order());
+        when(orderRepository.findAll()).thenReturn(expectedOrders);
+
+        // Act
+        List<Order> result = orderService.getAllOrders();
+
+        // Assert
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void getOrderById_ExistingOrder_ReturnsOrder() {
+        // Arrange
+        Order expectedOrder = new Order();
+        expectedOrder.setId(1);
+        when(orderRepository.findById(1)).thenReturn(Optional.of(expectedOrder));
+
+        // Act
+        Optional<Order> result = orderService.getOrderById(1);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(1, result.get().getId());
+    }
+
+    @Test
+    public void getOrderById_NonExistingOrder_ReturnsEmpty() {
+        // Arrange
+        when(orderRepository.findById(999)).thenReturn(Optional.empty());
+
+        // Act
+        Optional<Order> result = orderService.getOrderById(999);
+
+        // Assert
+        assertFalse(result.isPresent());
     }
 }

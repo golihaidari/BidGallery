@@ -44,6 +44,7 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
 
         String requestId = UUID.randomUUID().toString();
+        long startTime = System.currentTimeMillis();
 
         User user = request.getUser();
         Artist artist = request.getArtist();
@@ -51,18 +52,23 @@ public class AuthController {
 
         // Basic validation
         if (user.getEmail() == null || !isValidEmail(user.getEmail())) {
-            metricService.incrementCounter("auth.register.fail", "requestId", requestId);
+            metricService.incrementCounter("auth.register", "success", "false", "reason", "invalid_email");
+            metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, "success", "false");
+            
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "error", "Invalid email format",
                     "requestId", requestId
             ));
         }
-        if (user.getPassword() == null || user.getPassword().length() < 6) {
-            metricService.incrementCounter("auth.register.fail", "requestId", requestId);
+        if (user.getPassword() == null || user.getPassword().length() < 8) {
+
+            metricService.incrementCounter("auth.register", "success", "false", "reason", "invalid_password");
+            metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, "success", "false");
+            
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "error", "Password must be at least 6 characters",
+                    "error", "Password must be at least 8 characters",
                     "requestId", requestId
             ));
         }
@@ -70,6 +76,10 @@ public class AuthController {
         // Link Artist / Address if provided
         if(user.getAccountType() == AccountType.ARTIST){
             if (artist == null){
+
+                metricService.incrementCounter("auth.register", "success", "false", "reason", "missing_artist");
+                metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, "success", "false");
+
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "error", "Artist fields are required",
@@ -81,6 +91,10 @@ public class AuthController {
         }
         else if(user.getAccountType()== AccountType.CUSTOMER){
             if (address == null) {
+
+                metricService.incrementCounter("auth.register", "success", "false", "reason", "missing_address");
+                metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, "success", "false");
+
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "error", "address fields are required",
@@ -104,7 +118,10 @@ public class AuthController {
         // Save user (service handles logging internally)
         boolean success = authService.register(user, requestId);
         if (!success) {
-            metricService.incrementCounter("auth.register.fail", "requestId", requestId);
+            
+            metricService.incrementCounter("auth.register", "success", "false", "reason", "duplicate_or_db_error");
+            metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, "success", "false");
+            
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "error", "Email already registered or DB error",
@@ -112,7 +129,9 @@ public class AuthController {
             ));
         }
 
-        metricService.incrementCounter("auth.register.success", "requestId", requestId);
+        long duration = System.currentTimeMillis() - startTime;
+        metricService.incrementCounter("auth.register", "success", "true");
+        metricService.recordDuration("auth.register.duration", duration, "success", "true");
 
         // Generate JWT
         String token = JwtUtil.generateToken(user.getEmail(), user.getAccountType());
@@ -141,14 +160,18 @@ public class AuthController {
         String token = authService.getTokenFromRequest(request);
 
         if (token == null) {
-            metricService.incrementCounter("No token found, authentication", "success", "false");
+            metricService.incrementCounter("auth.address.fetch", "success", "false", "reason", "no_token");
+            metricService.recordDuration("auth.address.fetch.duration", System.currentTimeMillis() - startTime, "success", "false");
+
             return ResponseEntity.status(401).body("No token found");            
         }
 
         // Identify user using your AuthService
         Optional<User> userOpt = authService.getUserFromToken(token);
         if (userOpt.isEmpty()) {
-            metricService.incrementCounter("Invalid token, authentication", "success", "false");
+            metricService.incrementCounter("auth.address.fetch", "success", "false", "reason", "invalid_token");
+            metricService.recordDuration("auth.address.fetch.duration", System.currentTimeMillis() - startTime, "success", "false");
+            
             return ResponseEntity.status(402).body("Invalid token");
         }
 
@@ -158,15 +181,18 @@ public class AuthController {
         Optional<Address> addressOpt = addressService.getUserAddress(user.getId(), requestId);
 
         if(addressOpt.isEmpty()){
-            metricService.incrementCounter("Address", "success", "false");
+            metricService.incrementCounter("auth.address.fetch", "success", "false", "reason", "no_address");
+            metricService.recordDuration("auth.address.fetch.duration", System.currentTimeMillis() - startTime, "success", "false");
+
             return ResponseEntity.status(403).body("No address found");
         }
-        // Map to DTO and return
-        AddressDTO addressDTO = DtoMapper.toAddressDTO(addressOpt.get());
 
         long duration = System.currentTimeMillis() - startTime;
-        metricService.recordDuration("address.duration", duration, "success", "true");
+        metricService.incrementCounter("auth.address.fetch", "success", "true");
+        metricService.recordDuration("auth.address.fetch.duration", duration, "success", "true");
 
+        // Map to DTO and return
+        AddressDTO addressDTO = DtoMapper.toAddressDTO(addressOpt.get());
         return ResponseEntity.ok(Map.of("address", addressDTO));
     }
 
@@ -174,11 +200,15 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
         String requestId = UUID.randomUUID().toString();
+        long startTime = System.currentTimeMillis();
+
         String email = credentials.get("email");
         String password = credentials.get("password");
 
         if (email == null || password == null || email.isEmpty() || password.isEmpty()) {
-            metricService.incrementCounter("auth.login.fail", "requestId", requestId);
+            metricService.incrementCounter("auth.login", "success", "false", "reason", "missing_credentials");
+            metricService.recordDuration("auth.login.duration", System.currentTimeMillis() - startTime, "success", "false");
+
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "error", "Email and password are required",
@@ -188,7 +218,9 @@ public class AuthController {
 
         Optional<String> tokenOpt = authService.login(email, password, requestId);
         if (tokenOpt.isEmpty()) {
-            metricService.incrementCounter("auth.login.fail", "requestId", requestId);
+            metricService.incrementCounter("auth.login", "success", "false", "reason", "invalid_credentials");
+            metricService.recordDuration("auth.login.duration", System.currentTimeMillis() - startTime, "success", "false");
+
             return ResponseEntity.status(401).body(Map.of(
                     "success", false,
                     "error", "Invalid credentials",
@@ -196,7 +228,9 @@ public class AuthController {
             ));
         }
 
-        metricService.incrementCounter("auth.login.success", "requestId", requestId);
+        long duration = System.currentTimeMillis() - startTime;
+        metricService.incrementCounter("auth.login", "success", "true");
+        metricService.recordDuration("auth.login.duration", duration, "success", "true");
 
         ResponseCookie cookie = CookieUtil.createJwtCookie(tokenOpt.get());
         return ResponseEntity.ok()
@@ -213,10 +247,14 @@ public class AuthController {
     @PostMapping("/login/firebase")
     public ResponseEntity<?> loginWithFirebase(@RequestBody LoginRequestFirebase request) {
         String requestId = UUID.randomUUID().toString();
+        long startTime = System.currentTimeMillis();
+
         String idToken = request.getToken();
 
         if (idToken == null || idToken.isBlank()) {
-            metricService.incrementCounter("auth.login.firebase.fail", "requestId", requestId);
+            metricService.incrementCounter("auth.login.firebase", "success", "false", "reason", "missing_token");
+            metricService.recordDuration("auth.login.firebase.duration", System.currentTimeMillis() - startTime, "success", "false");
+
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "error", "Missing idToken",
@@ -226,7 +264,9 @@ public class AuthController {
 
         Optional<String> tokenOpt = authService.loginWithFirebase(idToken, requestId);
         if (tokenOpt.isEmpty()) {
-            metricService.incrementCounter("auth.login.firebase.fail", "requestId", requestId);
+            metricService.incrementCounter("auth.login.firebase", "success", "false", "reason", "invalid_token");
+            metricService.recordDuration("auth.login.firebase.duration", System.currentTimeMillis() - startTime, "success", "false");
+
             return ResponseEntity.status(401).body(Map.of(
                     "success", false,
                     "error", "Invalid Firebase token",
@@ -234,7 +274,9 @@ public class AuthController {
             ));
         }
 
-        metricService.incrementCounter("auth.login.firebase.success", "requestId", requestId);
+        long duration = System.currentTimeMillis() - startTime;
+        metricService.incrementCounter("auth.login.firebase", "success", "true");
+        metricService.recordDuration("auth.login.firebase.duration", duration, "success", "true");
 
         ResponseCookie cookie = CookieUtil.createJwtCookie(tokenOpt.get());
         return ResponseEntity.ok()
@@ -251,7 +293,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         String requestId = UUID.randomUUID().toString();
-        metricService.incrementCounter("auth.logout.success", "requestId", requestId);
+        metricService.incrementCounter("auth.logout", "success", "true");
 
         ResponseCookie cookie = CookieUtil.clearJwtCookie();
         return ResponseEntity.ok()

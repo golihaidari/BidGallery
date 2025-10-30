@@ -31,31 +31,51 @@ public class OrderService {
 
     // ----------------------------- PLACE ORDER -----------------------------
     @Transactional
-    public Order placeOrder(User user, List<CartItemDTO> cart, Address address, String paymentIntent,
-                            String userEmail, String requestId) {
+    public Order placeOrder(User user, List<CartItemDTO> cart, Address address, String paymentIntent, String userEmail, String requestId) {
 
-        Map<String, String> mdc = Map.of(
-                "userEmail", userEmail != null ? userEmail : "guest",
-                "requestId", requestId
-        );
-
-        loggingService.info("Validating payment intent", mergeMaps(mdc, Map.of("paymentIntent", paymentIntent)));
+        loggingService.info("Order placement process started", Map.of(
+            "userEmail", userEmail,
+            "cartSize", String.valueOf(cart.size()),
+            "paymentIntent", paymentIntent,
+            "requestId", requestId
+        ));
+        
+        // ------------ 1. Payment Validation ------------
+        loggingService.info("Starting payment validation", Map.of(
+            "paymentIntent", paymentIntent,
+            "requestId", requestId
+        ));
 
         boolean paymentValid = paymentService.validatePayment(paymentIntent);
         if (!paymentValid) {
-            loggingService.warn("Payment validation failed", mergeMaps(mdc, Map.of("paymentIntent", paymentIntent)));
+            loggingService.error("Order placement failed - payment validation unsuccessful", Map.of(
+                "paymentIntent", paymentIntent,
+                "userEmail", userEmail,
+                "requestId", requestId,
+                "reason", "payment_validation_failed"
+            ));
+
             throw new IllegalArgumentException("Payment validation failed or expired");
         }
 
-        loggingService.info("Payment validated successfully", mergeMaps(mdc, Map.of("paymentIntent", paymentIntent)));
+        loggingService.info("Payment validation completed successfully", Map.of(
+            "paymentIntent", paymentIntent,
+            "requestId", requestId
+        ));
 
-        // ------------ 1. Create order ------------
+        // ------------ 2. Create order ------------
         Order order = new Order();
         order.setUser(user);
         order.setOrderDate(LocalDate.now());
         order.setOrderStatus("Paid");
 
-        // ------------ 2. Reuse or save address ------------
+        loggingService.info("Order object created", Map.of(
+            "userEmail", userEmail,
+            "orderStatus", "Paid",
+            "requestId", requestId
+        ));
+
+        // ------------ 3. Reuse or save address ------------
         Optional<Address> existingAddress = addressService.findByAddressFields(
                 address.getAddress1(), address.getCity(), address.getPostalCode()
         );
@@ -63,36 +83,51 @@ public class OrderService {
         Address managedAddress;
         if (existingAddress.isPresent()) {
             managedAddress = existingAddress.get();
-            loggingService.info("Reusing existing address", mergeMaps(mdc, Map.of(
-                    "address1", address.getAddress1(),
-                    "city", address.getCity(),
-                    "postalCode", address.getPostalCode()
-            )));
+            loggingService.info("Reusing existing address for order", Map.of(
+                "addressId", String.valueOf(managedAddress.getId()),
+                "city", managedAddress.getCity(),
+                "userEmail", userEmail,
+                "requestId", requestId
+            ));
         } else {
             if (user != null) address.setUser(user);
             managedAddress = addressService.saveAddress(address);
-            loggingService.info("Saved new address", mergeMaps(mdc, Map.of(
-                    "address1", address.getAddress1(),
-                    "city", address.getCity(),
-                    "postalCode", address.getPostalCode()
-            )));
+            loggingService.info("New address created and linked to order", Map.of(
+                "addressId", String.valueOf(managedAddress.getId()),
+                "city", managedAddress.getCity(),
+                "userEmail", userEmail,
+                "requestId", requestId
+            ));
         }
 
         order.setAddress(managedAddress);
 
-        // ------------ 3. Save order ------------
+        // ------------ 4. Save order ------------
         Order savedOrder = orderRepository.save(order);
-        loggingService.info("Order saved successfully", mergeMaps(mdc, Map.of(
-                "orderId", String.valueOf(savedOrder.getId())
-        )));
+        loggingService.info("Order saved to database", Map.of(
+            "orderId", String.valueOf(savedOrder.getId()),
+            "userEmail", userEmail,
+            "requestId", requestId
+        ));
 
-        // ------------ 4. Add order items ------------
+        // ------------ 5. Process order items ------------
+        loggingService.info("Starting to process order items", Map.of(
+            "orderId", String.valueOf(savedOrder.getId()),
+            "itemCount", String.valueOf(cart.size()),
+            "requestId", requestId
+        ));
+
         for (CartItemDTO dto : cart) {
             Product product = productService.getProductById(dto.getProductId())
                     .orElseThrow(() -> {
-                        loggingService.error("Product not found while placing order", mergeMaps(mdc, Map.of(
-                                "productId", String.valueOf(dto.getProductId())
-                        )));
+
+                        loggingService.error("Order item processing failed - product not found", Map.of(
+                            "orderId", String.valueOf(savedOrder.getId()),
+                            "productId", String.valueOf(dto.getProductId()),
+                            "userEmail", userEmail,
+                            "requestId", requestId
+                        ));
+
                         return new IllegalArgumentException("Product not found: " + dto.getProductId());
                     });
 
@@ -104,20 +139,26 @@ public class OrderService {
             item.setPriceAtPurchase(dto.getBidPrice());
             savedOrder.addOrderItem(item);
 
-            loggingService.info("Added product to order", mergeMaps(mdc, Map.of(
-                    "orderId", String.valueOf(savedOrder.getId()),
-                    "productId", String.valueOf(product.getId()),
-                    "bidPrice", String.valueOf(dto.getBidPrice())
-            )));
+            loggingService.info("Product added to order successfully", Map.of(
+                "orderId", String.valueOf(savedOrder.getId()),
+                "productId", String.valueOf(product.getId()),
+                "productTitle", product.getTitle(),
+                "bidPrice", String.valueOf(dto.getBidPrice()),
+                "userEmail", userEmail,
+                "requestId", requestId
+            ));
         }
 
-        // ------------ 5. Save final order ------------
+        // ------------ 6. Save final order ------------
         Order finalOrder = orderRepository.save(savedOrder);
-        loggingService.info("Order completed successfully", mergeMaps(mdc, Map.of(
-                "orderId", String.valueOf(finalOrder.getId()),
-                "totalItems", String.valueOf(finalOrder.getOrderItems().size()),
-                "status", finalOrder.getOrderStatus()
-        )));
+
+        loggingService.info("Order placement completed successfully", Map.of(
+            "orderId", String.valueOf(finalOrder.getId()),
+            "userEmail", userEmail,
+            "totalItems", String.valueOf(finalOrder.getOrderItems().size()),
+            "status", finalOrder.getOrderStatus(),
+            "requestId", requestId
+        ));
 
         return finalOrder;
     }
@@ -125,17 +166,17 @@ public class OrderService {
     // ----------------------------- READ -----------------------------
     public List<Order> getAllOrders() {
         List<Order> orders = orderRepository.findAll();
-        loggingService.info("Fetched all orders", Map.of(
-                "count", String.valueOf(orders.size())
+        loggingService.info("Fetched all orders from database", Map.of(
+            "totalOrders", String.valueOf(orders.size())
         ));
         return orders;
     }
 
     public Optional<Order> getOrderById(Integer id) {
         Optional<Order> order = orderRepository.findById(id);
-        loggingService.info("Fetched order by ID", Map.of(
-                "orderId", String.valueOf(id),
-                "found", String.valueOf(order.isPresent())
+        loggingService.info("Order lookup by ID completed", Map.of(
+            "orderId", String.valueOf(id),
+            "found", String.valueOf(order.isPresent())
         ));
         return order;
     }
@@ -179,10 +220,4 @@ public class OrderService {
         return true;
     }
 
-    // ----------------------------- Helper: Merge MDC -----------------------------
-    private Map<String, String> mergeMaps(Map<String, String> a, Map<String, String> b) {
-        Map<String, String> merged = new HashMap<>(a);
-        merged.putAll(b);
-        return merged;
-    }
 }

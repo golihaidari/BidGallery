@@ -240,7 +240,7 @@ public class AuthControllerTest {
         
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertFalse((Boolean) response.getBody().get("success"));
-        assertEquals("Password must be at least 6 characters", response.getBody().get("error"));
+        assertEquals("Password must be at least 8 characters", response.getBody().get("error"));
     }
 
     // ---------------------------- LOGIN TESTS ----------------------------

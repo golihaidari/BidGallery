@@ -25,4 +25,5 @@ public class MetricService {
     public void recordDuration(String name, long millis, String... tags) {
         meterRegistry.timer(name, tags).record(Duration.ofMillis(millis));
     }
+
 }

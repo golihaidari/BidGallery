@@ -1,4 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <property name="LOG_PATH" value="./logs"/>
+    <property name="LOG_ARCHIVE" value="${LOG_PATH}/archive"/>
+    
+    <!-- FILE Appender - Main logging -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/bidgallery.log</file>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <logLevel/>
+                <threadName/>
+                <loggerName/>
+                <message/>
+                <mdc/>
+                <stackTrace/>
+            </providers>
+            <customFields>{"appName":"bidGallery-backend","environment":"dev"}</customFields>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_ARCHIVE}/bidgallery.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- CONSOLE Appender - For development -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
             <providers>
@@ -9,12 +37,14 @@
                 <message/>
                 <mdc/>
                 <stackTrace/>
-                <customFields>{"appName":"bidGallery-backend","environment":"dev"}</customFields>
             </providers>
+            <customFields>{"appName":"bidGallery-backend","environment":"dev"}</customFields>
         </encoder>
     </appender>
 
+    <!-- Root logger - Use both for now -->
     <root level="INFO">
+        <appender-ref ref="FILE"/>
         <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>

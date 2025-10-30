@@ -58,34 +58,47 @@ public class CheckoutController {
             productId = Integer.parseInt(request.get("productId").toString());
             bidAmount = Double.parseDouble(request.get("amount").toString());
         } catch (Exception e) {
-            metricService.incrementCounter("product.bid", "success", "false");
+            metricService.incrementCounter("checkout.bid", "success", "false", "reason", "invalid_input");
+            metricService.recordDuration("checkout.bid.duration", System.currentTimeMillis() - startTime, "success", "false");
+            
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid productId or bid amount"));
         }
 
         Product product = productService.getProductById(productId).orElse(null);
         if (product == null) {
-            metricService.incrementCounter("product.bid", "success", "false");
+            metricService.incrementCounter("checkout.bid", "success", "false", "reason", "product_not_found");
+            metricService.recordDuration("checkout.bid.duration", System.currentTimeMillis() - startTime, "success", "false");
+
             return ResponseEntity.status(404).body(Map.of("error", "Product not found with id " + productId));
         }
         
         if(product.isSold()){
+            metricService.incrementCounter("checkout.bid", "success", "false", "reason", "product_sold");
+            metricService.recordDuration("checkout.bid.duration", System.currentTimeMillis() - startTime, "success", "false");
+
             return ResponseEntity.badRequest().body(Map.of(
                 "message", "Product already sold."
             ));  
         }
 
         boolean accepted = productService.placeBid(productId, bidAmount, email, requestId);
+
         long duration = System.currentTimeMillis() - startTime;
-
-        metricService.recordDuration("product.bid.duration", duration, "success", String.valueOf(accepted));
-
         if (accepted) {
-            metricService.incrementCounter("product.bid", "success", "true");
+            // Debug the metric service call
+            System.out.println("Calling metricService.incrementCounter... for success................");
+            metricService.incrementCounter("checkout.bid", "success", "true");
+            metricService.recordDuration("checkout.bid.duration", duration, "success", "true");
+
             return ResponseEntity.ok(Map.of(
                     "message", "Bid for product Id: "+productId+" is accepted."
             ));
         } else {
-            metricService.incrementCounter("product.bid", "success", "false");
+            // Debug the metric service call
+            System.out.println("Calling metricService.incrementCounter... for false.............");
+            metricService.incrementCounter("checkout.bid", "success", "false", "reason", "bid_too_low");
+            metricService.recordDuration("checkout.bid.duration", duration, "success", "false");
+            
             return ResponseEntity.badRequest().body(Map.of(
                     "message", "Bid too low. Retry agaian."
             ));
@@ -114,7 +127,9 @@ public class CheckoutController {
         if (request.getCart() == null || request.getCart().isEmpty() || request.getAddress() == null ||
             request.getPaymentIntentId() == null || request.getPaymentIntentId().isBlank()) {
 
-            metricService.incrementCounter("checkout.orders", "success", "false");
+            metricService.incrementCounter("checkout.order", "success", "false", "reason", "empty_cart | address | payment intent");
+            metricService.recordDuration("checkout.order.duration", System.currentTimeMillis() - startTime, "success", "false");
+            
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "error", "Invalid cart, missing address, or payment intent"
@@ -132,8 +147,8 @@ public class CheckoutController {
             );
 
             long duration = System.currentTimeMillis() - startTime;
-            metricService.incrementCounter("checkout.orders", "success", "true");
-            metricService.recordDuration("checkout.duration", duration);
+            metricService.incrementCounter("checkout.order", "success", "true");
+            metricService.recordDuration("checkout.order.duration", duration, "success", "true");
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -142,8 +157,9 @@ public class CheckoutController {
 
         } catch (IllegalArgumentException e) {
             long duration = System.currentTimeMillis() - startTime;
-            metricService.incrementCounter("checkout.orders", "success", "false");
-            metricService.recordDuration("checkout.duration", duration);
+            metricService.incrementCounter("checkout.order", "success", "false", "reason", "validation_error");
+            metricService.recordDuration("checkout.order.duration", duration, "success", "false");
+
 
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
@@ -152,8 +168,8 @@ public class CheckoutController {
 
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
-            metricService.incrementCounter("checkout.orders", "success", "false");
-            metricService.recordDuration("checkout.duration", duration);
+            metricService.incrementCounter("checkout.order", "success", "false", "reason", "server_error");
+            metricService.recordDuration("checkout.order.duration", duration, "success", "false");
 
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,

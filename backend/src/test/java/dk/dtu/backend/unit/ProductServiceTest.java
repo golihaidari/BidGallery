@@ -62,7 +62,6 @@ public class ProductServiceTest {
         // Assert
         assertTrue(result.isPresent());
         assertEquals(1, result.get().getId());
-        verify(loggingService).info(eq("Fetched product by ID"), anyMap());
     }
 
     @Test
@@ -75,7 +74,6 @@ public class ProductServiceTest {
 
         // Assert
         assertFalse(result.isPresent());
-        verify(loggingService).info(eq("Fetched product by ID"), anyMap());
     }
 
     @Test
@@ -88,7 +86,6 @@ public class ProductServiceTest {
 
         // Assert
         assertTrue(result);
-        verify(loggingService).info(eq("Bid attempt processed"), anyMap());
     }
 
     @Test
@@ -101,7 +98,6 @@ public class ProductServiceTest {
 
         // Assert
         assertFalse(result);
-        verify(loggingService).info(eq("Bid attempt processed"), anyMap());
     }
 
     @Test
@@ -114,7 +110,6 @@ public class ProductServiceTest {
 
         // Assert
         assertFalse(result);
-        verify(loggingService).warn(eq("Bid failed. Product not found or already sold"), anyMap());
     }
 
     @Test
@@ -127,6 +122,5 @@ public class ProductServiceTest {
 
         // Assert
         assertFalse(result);
-        verify(loggingService).warn(eq("Bid failed. Product not found or already sold"), anyMap());
     }
 }

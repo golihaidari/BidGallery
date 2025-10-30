@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
 
@@ -25,7 +26,7 @@ public class MetricsFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         long start = System.currentTimeMillis();
-
+   
         try {
             filterChain.doFilter(request, response);
         } finally {

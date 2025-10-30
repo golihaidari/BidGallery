@@ -22,16 +22,22 @@ public class AddressService {
 
     // ------------------ CREATE -----------------------
     public Address saveAddress(Address address) {
+        loggingService.info("Address creation started", Map.of(
+            "city", address.getCity(),
+            "address1", address.getAddress1(),
+            "postalCode", address.getPostalCode()
+        ));
+
         try {
             Address saved = addressRepository.save(address);
-            loggingService.info("Address saved successfully", Map.of(
+            loggingService.info("Address creation completed successfully", Map.of(
                 "addressId", String.valueOf(saved.getId()),
                 "city", saved.getCity(),
                 "action", "create"
             ));
             return saved;
         } catch (Exception e) {
-            loggingService.error("Error saving address", Map.of(
+            loggingService.error("Address creation failed", Map.of(
                 "city", address.getCity(),
                 "error", e.getMessage()
             ));
@@ -40,6 +46,47 @@ public class AddressService {
     }
 
     // ------------------ READ -----------------------
+        public Optional<Address> getUserAddress(int userId, String requestId) {
+        loggingService.info("User address lookup started", Map.of(
+            "userId", String.valueOf(userId),
+            "requestId", requestId
+        ));
+
+        Optional<Address> address = addressRepository.findByUserId(userId);
+        
+        if (address.isPresent()) {
+            loggingService.info("User address found successfully", Map.of(
+                "Address Id", String.valueOf(address.get().getId()),
+                "requestId", requestId
+            ));
+        } else {
+            loggingService.info("User address not found", Map.of(
+                "userId", String.valueOf(userId),
+                "requestId", requestId,
+                "reason", "no_address_linked"
+            ));
+        }
+        
+        return address;
+    }
+
+    public Optional<Address> findByAddressFields(String address1, String city, String postalCode) {
+        loggingService.info("Address lookup by fields started", Map.of(
+            "address1", address1,
+            "city", city,
+            "postalCode", postalCode
+        ));
+
+        Optional<Address> addressOpt = addressRepository.findByAddress1AndCityAndPostalCode(address1, city, postalCode);
+        loggingService.info("Address lookup by fields completed", Map.of(
+            "address1", address1,
+            "city", city,
+            "postalCode", postalCode,
+            "found", String.valueOf(addressOpt.isPresent())
+        ));
+        return addressOpt;
+    }
+
     public Optional<Address> getAddressById(Integer id) {
         Optional<Address> addressOpt = addressRepository.findById(id);
         loggingService.info("Fetched address by ID", Map.of(
@@ -66,45 +113,7 @@ public class AddressService {
         return addresses;
     }
 
-    public Optional<Address> getUserAddress(int userId, String requestId) {
-        Optional<Address> address = addressRepository.findByUserId(userId);
-        
-        if (address.isPresent()) {
-            loggingService.info("Fetched the user address", Map.of(
-                "Address Id", String.valueOf(address.get().getId()),
-                "requestId", requestId
-            ));
-        } else {
-            loggingService.info("No address found for user", Map.of(
-                "userId", String.valueOf(userId),
-                "requestId", requestId
-            ));
-        }
-        
-        return address;
-    }
-
-    /*
-    public Optional<Address> getUserAddress(int userId, String requestId) {
-        Optional<Address> address = addressRepository.findByUserId(userId);
-        loggingService.info("Fetched the user addresse", Map.of(
-            "Address Id", String.valueOf(address.get().getId()),
-            "requestId", requestId
-        ));
-        return address;
-    }*/
-
-    public Optional<Address> findByAddressFields(String address1, String city, String postalCode) {
-        Optional<Address> addressOpt = addressRepository.findByAddress1AndCityAndPostalCode(address1, city, postalCode);
-        loggingService.info("Checked address existence by fields", Map.of(
-            "address1", address1,
-            "city", city,
-            "postalCode", postalCode,
-            "found", String.valueOf(addressOpt.isPresent())
-        ));
-        return addressOpt;
-    }
-
+    //this methos can be removed
     public Optional<Address> findByUserAndAddress(User user, String address1, String city, String postalCode) {
         Optional<Address> addressOpt = addressRepository.findByUserAndAddress1AndCityAndPostalCode(user, address1, city, postalCode);
         loggingService.info("Fetched address by user and fields", Map.of(

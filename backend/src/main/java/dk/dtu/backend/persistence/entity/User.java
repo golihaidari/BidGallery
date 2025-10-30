@@ -1,7 +1,10 @@
 package dk.dtu.backend.persistence.entity;
 
+import jakarta.validation.constraints.*;
 import jakarta.persistence.*;
 import java.util.List;
+
+import org.hibernate.validator.constraints.Length;
 
 @Entity
 @Table(name = "users")
@@ -12,12 +15,18 @@ public class User {
     @Column(name = "id", nullable = false)
     private Integer id;  // simple id
 
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
+    @NotBlank(message = "Password is required")
+    @Length(min = 8, message = "Password must be at least 8 characters")
+    //@Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$",  message = "Password must contain at least one uppercase letter, one lowercase letter, and one number")
     @Column(name = "password", nullable = true)
     private String password;
 
+    @NotNull(message = "Account type is required")
     @Enumerated(EnumType.STRING)
     @Column(name = "account_type", nullable = false)
     private AccountType accountType;

@@ -44,8 +44,9 @@ public class ArtistController {
         List<ArtistDTO> artistDTOs = DtoMapper.toArtistDTOList(artists);
 
         long duration = System.currentTimeMillis() - startTime;
+        metricService.incrementCounter("artists.all.fetch", "success", "true");
+        metricService.recordDuration("artists.all.duration", duration, "success", "true");
 
-        metricService.recordDuration("availableProducts.duration", duration, "success", "true");
         return ResponseEntity.ok(artistDTOs);
     }
 

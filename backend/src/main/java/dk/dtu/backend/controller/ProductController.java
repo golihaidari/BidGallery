@@ -85,7 +85,8 @@ public class ProductController {
         List<ProductDTO> productDTOs = DtoMapper.toProductDTOList(products);
 
         long duration = System.currentTimeMillis() - startTime;
-        metricService.recordDuration("availableProducts.duration", duration, "success", "true");
+        metricService.incrementCounter("products.available.fetch", "success", "true");
+        metricService.recordDuration("products.available.duration", duration, "success", "true");
 
         return ResponseEntity.ok(productDTOs);
     }

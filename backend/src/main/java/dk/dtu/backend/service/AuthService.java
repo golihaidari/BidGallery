@@ -39,22 +39,24 @@ public class AuthService {
 
             if (storedPassword != null && encryptPassword(rawPassword).equals(storedPassword)) {
                 String token = JwtUtil.generateToken(user.getEmail(), user.getAccountType());
-                loggingService.info("User login successful", Map.of(
+                loggingService.info("User authentication successful", Map.of(
                         "email", email,
                         "accountType", user.getAccountType().name(),
                         "requestId", requestId
                 ));
                 return Optional.of(token);
             } else {
-                loggingService.warn("Invalid password attempt", Map.of(
+                loggingService.warn("Authentication failed - invalid password", Map.of(
                         "email", email,
-                        "requestId", requestId
+                        "requestId", requestId,
+                        "reason", "invalid_credentials"
                 ));
             }
         } else {
-            loggingService.warn("Login attempt with non-existing email", Map.of(
+            loggingService.warn("Authentication failed - user not found", Map.of(
                     "email", email,
-                    "requestId", requestId
+                    "requestId", requestId,
+                    "reason", "user_not_found"
             ));
         }
 
@@ -63,31 +65,49 @@ public class AuthService {
 
     // ------------------------- Email/Password registration -------------------------
     public boolean register(User user, String requestId) {
+        loggingService.info("User registration started", Map.of(
+            "email", user.getEmail(),
+            "accountType", user.getAccountType().name(),
+            "requestId", requestId
+        ));
+
         Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
         if (existingUser.isPresent()) {
-            loggingService.warn("Attempted registration with existing email", Map.of(
+            loggingService.warn("Registration failed - email already exists", Map.of(
                     "email", user.getEmail(),
-                    "requestId", requestId
+                    "requestId", requestId,
+                    "reason", "duplicate_email"
             ));
             return false;
         }
 
-        if (user.getAccountType() == null) user.setAccountType(AccountType.GOOGLE);
+        if (user.getAccountType() == null){
+            user.setAccountType(AccountType.GOOGLE);
+            loggingService.info("Default account type assigned", Map.of(
+                "email", user.getEmail(),
+                "assignedType", "GOOGLE",
+                "requestId", requestId
+            ));
+        }
 
         if (user.getPassword() != null) {
             user.setPassword(encryptPassword(user.getPassword()));
+            loggingService.debug("Password encrypted for registration", Map.of(
+                "email", user.getEmail(),
+                "requestId", requestId
+            ));
         }
 
         try {
             userRepository.save(user); // cascades Artist/Address automatically
-            loggingService.info("User registered successfully", Map.of(
+            loggingService.info("User registration completed successfully", Map.of(
                     "email", user.getEmail(),
                     "accountType", user.getAccountType().name(),
                     "requestId", requestId
             ));
             return true;
         } catch (Exception e) {
-            loggingService.error("Error registering new user", Map.of(
+            loggingService.error("User registration failed - database error", Map.of(
                     "email", user.getEmail(),
                     "error", e.getMessage(),
                     "requestId", requestId
@@ -98,6 +118,11 @@ public class AuthService {
 
     // ------------------------- Firebase Google login -------------------------
     public Optional<String> loginWithFirebase(String idToken, String requestId) {
+        loggingService.info("Firebase authentication started", Map.of(
+            "requestId", requestId,
+            "authMethod", "firebase_google"
+        ));
+
         try {
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
             String email = decodedToken.getEmail();
@@ -108,7 +133,7 @@ public class AuthService {
                 newUser.setEmail(email);
                 newUser.setAccountType(AccountType.GOOGLE);
                 userRepository.save(newUser);
-                loggingService.info("New Google user created", Map.of(
+                loggingService.info("New user created via Firebase authentication", Map.of(
                         "email", email,
                         "requestId", requestId
                 ));
@@ -116,14 +141,14 @@ public class AuthService {
             });
 
             String token = JwtUtil.generateToken(user.getEmail(), user.getAccountType());
-            loggingService.info("Google user logged in successfully", Map.of(
+            loggingService.info("Firebase authentication completed successfully", Map.of(
                     "email", email,
                     "requestId", requestId
             ));
             return Optional.of(token);
 
         } catch (FirebaseAuthException e) {
-            loggingService.error("Firebase token verification failed", Map.of(
+            loggingService.error("Firebase authentication failed - token verification error", Map.of(
                     "error", e.getMessage(),
                     "requestId", requestId
             ));
@@ -144,8 +169,9 @@ public class AuthService {
             }
             return hexString.toString();
         } catch (NoSuchAlgorithmException e) {
-            loggingService.error("Password encryption failed", Map.of(
-                    "error", e.getMessage()
+            loggingService.error("Password encryption algorithm not available", Map.of(
+                    "error", e.getMessage(),
+                    "algorithm", "SHA-256"
             ));
             return null;
         }

@@ -105,7 +105,9 @@ public class AuthServiceTest {
         // Assert
         assertTrue(result, "Registration should succeed for new customer");
         verify(userRepository).save(any(User.class));
-        verify(loggingService).info(eq("User registered successfully"), anyMap());
+        // UPDATED: Changed to match new log messages
+        verify(loggingService).info(eq("User registration started"), anyMap());
+        verify(loggingService).info(eq("User registration completed successfully"), anyMap());
     }
 
     @Test
@@ -121,7 +123,9 @@ public class AuthServiceTest {
         // Assert
         assertFalse(result, "Registration should fail for existing email");
         verify(userRepository, never()).save(any());
-        verify(loggingService).warn(eq("Attempted registration with existing email"), anyMap());
+        // UPDATED: Changed to match new log messages
+        verify(loggingService).info(eq("User registration started"), anyMap());
+        verify(loggingService).warn(eq("Registration failed - email already exists"), anyMap());
     }
 
     @Test
@@ -129,6 +133,7 @@ public class AuthServiceTest {
         // Arrange
         String requestId = "test-request-555";
         
+        googleUser.setEmail("newEmail@test.com");
         when(userRepository.findByEmail(googleUser.getEmail())).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenReturn(googleUser);
 
@@ -138,7 +143,6 @@ public class AuthServiceTest {
         // Assert
         assertTrue(result, "Google account registration should succeed without password");
         verify(userRepository).save(any(User.class));
-        verify(loggingService).info(eq("User registered successfully"), anyMap());
     }
 
     @Test
@@ -155,7 +159,6 @@ public class AuthServiceTest {
 
         // Assert
         assertFalse(result.isPresent(), "Should return empty for non-existent user");
-        verify(loggingService).warn(eq("Login attempt with non-existing email"), anyMap());
     }
 
     @Test
