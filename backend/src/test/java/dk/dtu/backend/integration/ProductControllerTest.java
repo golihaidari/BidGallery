@@ -1,15 +1,22 @@
 package dk.dtu.backend.integration;
 
+import dk.dtu.backend.TestApplication;
 import dk.dtu.backend.TestDataFactory;
+import dk.dtu.backend.TestSecurityConfig;
 import dk.dtu.backend.persistence.entity.*;
 import dk.dtu.backend.persistence.repository.UserRepository;
 import dk.dtu.backend.utils.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -17,7 +24,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+
+@SpringBootTest(
+    classes = TestApplication.class, 
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
 public class ProductControllerTest {
 
@@ -40,9 +53,9 @@ public class ProductControllerTest {
         
         // Just create a user for auth
         customerEmail = "customer_" + System.currentTimeMillis() + "@example.com";
-        User customerUser = TestDataFactory.createUser(customerEmail, AccountType.CUSTOMER);
-        userRepository.save(customerUser);
-        customerJwtToken = JwtUtil.generateToken(customerEmail, AccountType.CUSTOMER);
+        User customerUser = TestDataFactory.createUser(customerEmail, "CUSTOMER");
+        customerUser = userRepository.save(customerUser);
+        customerJwtToken = JwtUtil.generateToken(customerEmail, "CUSTOMER", customerUser.getId());
     }
 
     @Test

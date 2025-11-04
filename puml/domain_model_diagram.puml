@@ -23,6 +23,7 @@ class Product {
     - secretPrice : double
     - currency : string
     - imageUrl : string
+    - isSold : boolean
 }
 
 class Address {
@@ -40,7 +41,6 @@ class Address {
 class Order {
     - orderDate : date
     - orderStatus : string
-    - price : double
 }
 
 class OrderItem {

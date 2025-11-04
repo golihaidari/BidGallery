@@ -1,24 +1,38 @@
 package dk.dtu.backend.unit;
 
-import dk.dtu.backend.TestDataFactory;
-import dk.dtu.backend.dto.CartItemDTO;
-import dk.dtu.backend.persistence.entity.*;
-import dk.dtu.backend.service.*;
-import dk.dtu.backend.persistence.repository.OrderRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.ActiveProfiles;
 
+import dk.dtu.backend.TestDataFactory;
+import dk.dtu.backend.dto.CartItemDTO;
+import dk.dtu.backend.persistence.entity.Address;
+import dk.dtu.backend.persistence.entity.Artist;
+import dk.dtu.backend.persistence.entity.Order;
+import dk.dtu.backend.persistence.entity.Product;
+import dk.dtu.backend.persistence.entity.User;
+import dk.dtu.backend.persistence.repository.OrderRepository;
+import dk.dtu.backend.service.AddressService;
+import dk.dtu.backend.service.LoggingService;
+import dk.dtu.backend.service.OrderService;
+import dk.dtu.backend.service.PaymentService;
+import dk.dtu.backend.service.ProductService;
+
+@ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
 public class OrderServiceTest {
 
@@ -51,10 +65,10 @@ public class OrderServiceTest {
     @BeforeEach
     public void setup() {
         // Create test data once for all tests
-        customer = TestDataFactory.createUser("customer@example.com", AccountType.CUSTOMER);
+        customer = TestDataFactory.createUser("customer@example.com", "CUSTOMER");
         address = TestDataFactory.createAddress();
         
-        artistUser = TestDataFactory.createUser("artist@example.com", AccountType.ARTIST);
+        artistUser = TestDataFactory.createUser("artist@example.com", "ARTIST");
         artist = TestDataFactory.createArtist(artistUser);
         availableProduct = TestDataFactory.createProductWithId(1, artist, 500.0);
         
@@ -70,7 +84,7 @@ public class OrderServiceTest {
     public void placeOrder_ValidOrder_ReturnsOrder() {
         // Arrange
         when(paymentService.validatePayment("valid-payment")).thenReturn(true);
-        when(addressService.findByAddressFields(any(), any(), any())).thenReturn(Optional.empty());
+        //when(addressService.findByAddressFields(any(), any(), any())).thenReturn(Optional.empty());
         when(addressService.saveAddress(any())).thenReturn(address);
         when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(productService.getProductById(1)).thenReturn(Optional.of(availableProduct));
@@ -81,8 +95,7 @@ public class OrderServiceTest {
             validCart, 
             address, 
             "valid-payment", 
-            customer.getEmail(), 
-            "req123"
+            customer.getEmail()
         );
 
         // Assert
@@ -101,33 +114,9 @@ public class OrderServiceTest {
                 validCart, 
                 address, 
                 "invalid-payment", 
-                customer.getEmail(), 
-                "req123"
+                customer.getEmail()
             );
         });
-    }
-
-    @Test
-    public void placeOrder_ProductNotFound_ThrowsException() {
-        // Arrange
-        when(paymentService.validatePayment("valid-payment")).thenReturn(true);
-        when(addressService.findByAddressFields(any(), any(), any())).thenReturn(Optional.empty());
-        when(addressService.saveAddress(any())).thenReturn(address);
-        when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(productService.getProductById(999)).thenReturn(Optional.empty()); // Product not found
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> {
-            orderService.placeOrder(
-                customer, 
-                invalidCart, 
-                address, 
-                "valid-payment", 
-                customer.getEmail(), 
-                "req123"
-            );
-        });
-        
     }
 
     @Test

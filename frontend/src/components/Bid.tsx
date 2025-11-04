@@ -68,7 +68,7 @@ const Bid: React.FC = () => {
           productId: selectedProduct.id,
           amount: bidAmount,
         }),
-        mode: "cors",
+        credentials: "include",
       },
       "Failed to submit bid"
     );

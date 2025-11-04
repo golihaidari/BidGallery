@@ -3,7 +3,6 @@ package dk.dtu.backend.unit;
 import dk.dtu.backend.TestDataFactory;
 import dk.dtu.backend.persistence.entity.Address;
 import dk.dtu.backend.persistence.entity.User;
-import dk.dtu.backend.persistence.entity.AccountType;
 import dk.dtu.backend.persistence.repository.AddressRepository;
 import dk.dtu.backend.service.AddressService;
 import dk.dtu.backend.service.LoggingService;
@@ -14,12 +13,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
 public class AddressServiceTest {
 
@@ -39,7 +40,7 @@ public class AddressServiceTest {
     @BeforeEach
     public void setup() {
         // Create test data using TestDataFactory
-        testUser = TestDataFactory.createUser("test@example.com", AccountType.CUSTOMER);
+        testUser = TestDataFactory.createUser("test@example.com", "CUSTOMER");
         testUser.setId(1);
         
         testAddress = TestDataFactory.createAddress();
@@ -56,7 +57,7 @@ public class AddressServiceTest {
         when(addressRepository.findByUserId(testUser.getId())).thenReturn(Optional.of(testAddress));
 
         // Act
-        Optional<Address> result = addressService.getUserAddress(testUser.getId(), requestId);
+        Optional<Address> result = addressService.getUserAddress(testUser.getId());
 
         // Assert
         assertTrue(result.isPresent(), "Address should be present");
@@ -72,7 +73,7 @@ public class AddressServiceTest {
         when(addressRepository.findByUserId(testUser.getId())).thenReturn(Optional.empty());
 
         // Act
-        Optional<Address> result = addressService.getUserAddress(testUser.getId(), requestId);
+        Optional<Address> result = addressService.getUserAddress(testUser.getId());
 
         // Assert
         assertFalse(result.isPresent(), "Address should not be present");

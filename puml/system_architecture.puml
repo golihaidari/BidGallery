@@ -7,37 +7,65 @@ actor User
 package "a) Frontend (Client)"{
     rectangle "Single Page Application \n(React + Vite + TS)" as FE
 }
-
-' --- External services ---
-rectangle "d) External Identity Provider\n(OAuth)" as IdP
-rectangle "e) External Payment API \n(Pipedream Mock)" as Payment
-database "c) MariaDB\nUsers, Artists, Addresses, Products, Orders" as DB
-
 ' --- Backend layers ---
-package "b) Backend (Server)" {
-  rectangle "Controller Layer" {
-    rectangle "Other Endpoints" as OtherCtrl
-    rectangle "Auth Endpoint (/auth/login)" as AuthCtrl    
+package "b) Backend (Server)"  {
+  rectangle "Controller Layer" as Controllers{
+    rectangle "Auth Endpoint: \n-register \n-login \n-logout" as AuthCtrl  
+    rectangle "Other Endpoints" as OtherCtrl 
+    rectangle "checkout Endpoint: \n-placebid \nplaceorder" as CheckoutCtrl
   }
-  rectangle "Service Layer\nBusiness Logic" {
-    rectangle "Auth" as AuthSer
-    rectangle "Orders, Users, Products, Addresses" as OtherService
+  rectangle "Service Layer" as Services {
+    rectangle "LoggingService" as LogSer
+    rectangle "MetricService" as MetricSer
+
+    rectangle "Business Logic" as BusinessSer {
+      rectangle "Auth Service" as AuthSer
+      rectangle "Products, \nOrders, \nUsers, \nAddresses" as OtherSer
+      rectangle "Payment Service"as PaymentSer
+    }
   }
   rectangle "Repository Layer\nDatabase Access (MariaDB CRUD)" as Repo
 }
 
+database "c) MariaDB\nUsers, Artists, Addresses, Products, Orders" as DB
+' --- External services ---
+rectangle "d) External Identity Provider\n(OAuth)" as IdP
+rectangle "e) External Payment API \n(Pipedream Mock)" as Payment
+
+rectangle "f) External Observability Stack" {
+    rectangle "Grafana\n(Dashboards + Explore)" as Grafana
+    rectangle "Prometheus\n(Metrics Storage)" as Prometheus
+    rectangle "Loki\n(Log Aggregation)" as Loki
+}
+
 ' --- Connections (two-way implied) ---
 User -- FE
-FE -- AuthCtrl : send ID token / receive JWT
 FE -- OtherCtrl : API requests / response
+FE -- CheckoutCtrl:  request(bid/order) / response
+FE -- AuthCtrl : send ID token / receive JWT
+
+
+Controllers -- MetricSer
+BusinessSer -- LogSer
 
 AuthCtrl -- AuthSer
-OtherCtrl -- OtherService
+CheckoutCtrl -- OtherSer
+CheckoutCtrl -- PaymentSer
+OtherCtrl -- OtherSer
 
-OtherService -- Repo : query / return data
+MetricSer ..> Prometheus : Exposes metrics via\n/actuator/prometheus
+LogSer ..> Loki : Streams JSON logs with\nstructured fields & correlationId
+
+AuthSer-- Repo : query / return data
+OtherSer -- Repo : query / return data
 Repo -- DB : read/write
-OtherService -- Payment : call / response
+PaymentSer -- Payment : call / response
 AuthSer -- IdP : verify token / result
 FE -- IdP : OAuth request / ID token
+
+' **OBSERVABILITY STACK**
+Prometheus -- Grafana : Metrics dashboards\n(bid success rates, durations)
+Loki -- Grafana : Log exploration\n(correlation tracing, error analysis)
+
 
 @enduml

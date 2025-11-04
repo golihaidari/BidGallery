@@ -1,14 +1,14 @@
 package dk.dtu.backend.service;
 
-import dk.dtu.backend.persistence.entity.Product;
-import dk.dtu.backend.persistence.repository.ProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import dk.dtu.backend.persistence.entity.Product;
+import dk.dtu.backend.persistence.repository.ProductRepository;
 
 @Service
 public class ProductService {
@@ -20,20 +20,16 @@ public class ProductService {
     private LoggingService loggingService;
 
     // ----------------------------- BIDDING LOGIC -----------------------------
-   public boolean placeBid(Integer productId, double bidValue, String userEmail, String requestId) {
+   public boolean placeBid(Integer productId, double bidValue) {
         loggingService.info("Bid placement process started", Map.of(
             "productId", productId.toString(),
-            "bidValue", String.valueOf(bidValue),
-            "userEmail", userEmail != null ? userEmail : "guest",
-            "requestId", requestId
+            "bidValue", String.valueOf(bidValue)
         ));
 
         Optional<Product> optionalProduct = productRepository.findById(productId);
         if (optionalProduct.isEmpty() || optionalProduct.get().isSold()) {
             loggingService.warn("Bid placement failed - product not found", Map.of(
                 "productId", productId.toString(),
-                "userEmail", userEmail != null ? userEmail : "guest",
-                "requestId", requestId,
                 "reason", "product_not_found"
             ));
             return false;
@@ -45,8 +41,6 @@ public class ProductService {
         loggingService.warn("Bid placement failed - product already sold", Map.of(
                 "productId", productId.toString(),
                 "productTitle", product.getTitle(),
-                "userEmail", userEmail != null ? userEmail : "guest",
-                "requestId", requestId,
                 "reason", "product_sold"
         ));
 
@@ -54,13 +48,10 @@ public class ProductService {
     }
 
     // ----------------------------- CREATE -----------------------------
-    public Product saveProduct(Product product, String userEmail, String requestId) {
+    public Product saveProduct(Product product) {
         loggingService.info("Product update started", Map.of(
             "productId", String.valueOf(product.getId()),
-            "productTitle", product.getTitle(),
-            "userEmail", userEmail,
-            "action", "update_sold_status",
-            "requestId", requestId
+            "action", "update_sold_status"
         ));
 
         try {
@@ -68,18 +59,14 @@ public class ProductService {
             loggingService.info("Product update completed successfully", Map.of(
                 "productId", String.valueOf(saved.getId()),
                 "title", saved.getTitle(),
-                "soldStatus", String.valueOf(saved.isSold()),
-                "userEmail", userEmail,
-                "requestId", requestId
+                "soldStatus", String.valueOf(saved.isSold())
             ));
             return saved;
         } catch (Exception e) {
             loggingService.error("Product update failed", Map.of(
                 "productId", String.valueOf(product.getId()),
                 "title", product.getTitle(),
-                "error", e.getMessage(),
-                "userEmail", userEmail,
-                "requestId", requestId
+                "error", e.getMessage()
             ));
             throw e;
         }
@@ -96,11 +83,10 @@ public class ProductService {
         return product;
     }
 
-    public List<Product> getAvailableProducts(String requestId) {
+    public List<Product> getAvailableProducts() {
         List<Product> products = productRepository.findBySoldFalse();
         loggingService.info("Available products fetched successfully", Map.of(
-            "availableCount", String.valueOf(products.size()),
-            "requestId", requestId
+            "availableCount", String.valueOf(products.size())
         ));
         return products;
     }

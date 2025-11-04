@@ -43,11 +43,10 @@ public class ArtistService {
     }
 
     // ------------------ READ -----------------------
-    public List<Artist> getAllArtists(String requestId) {
+    public List<Artist> getAllArtists() {
         List<Artist> artists = artistRepository.findAll();
         loggingService.info("All artists response prepared", Map.of(
-            "count", String.valueOf(artists.size()),
-            "requestId", requestId         
+            "count", String.valueOf(artists.size())      
         ));
         return artists;
     }

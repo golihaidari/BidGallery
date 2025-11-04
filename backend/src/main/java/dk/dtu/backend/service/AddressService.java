@@ -1,15 +1,15 @@
 package dk.dtu.backend.service;
 
-import dk.dtu.backend.persistence.entity.Address;
-import dk.dtu.backend.persistence.entity.User;
-import dk.dtu.backend.persistence.repository.AddressRepository;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import dk.dtu.backend.persistence.entity.Address;
+import dk.dtu.backend.persistence.entity.User;
+import dk.dtu.backend.persistence.repository.AddressRepository;
 
 @Service
 public class AddressService {
@@ -46,23 +46,20 @@ public class AddressService {
     }
 
     // ------------------ READ -----------------------
-        public Optional<Address> getUserAddress(int userId, String requestId) {
+        public Optional<Address> getUserAddress(int userId) {
         loggingService.info("User address lookup started", Map.of(
-            "userId", String.valueOf(userId),
-            "requestId", requestId
+            "userId", String.valueOf(userId)
         ));
 
         Optional<Address> address = addressRepository.findByUserId(userId);
         
         if (address.isPresent()) {
             loggingService.info("User address found successfully", Map.of(
-                "Address Id", String.valueOf(address.get().getId()),
-                "requestId", requestId
+                "Address Id", String.valueOf(address.get().getId())
             ));
         } else {
             loggingService.info("User address not found", Map.of(
                 "userId", String.valueOf(userId),
-                "requestId", requestId,
                 "reason", "no_address_linked"
             ));
         }
@@ -70,6 +67,7 @@ public class AddressService {
         return address;
     }
 
+    /*
     public Optional<Address> findByAddressFields(String address1, String city, String postalCode) {
         loggingService.info("Address lookup by fields started", Map.of(
             "address1", address1,
@@ -86,6 +84,20 @@ public class AddressService {
         ));
         return addressOpt;
     }
+
+    public Optional<Address> findByUserAndAddress(User user, String address1, String city, String postalCode) {
+        Optional<Address> addressOpt = addressRepository.findByUserAndAddress1AndCityAndPostalCode(user, address1, city, postalCode);
+        loggingService.info("Fetched address by user and fields", Map.of(
+            "userId", String.valueOf(user.getId()),
+            "address1", address1,
+            "city", city,
+            "postalCode", postalCode,
+            "found", String.valueOf(addressOpt.isPresent())
+        ));
+        return addressOpt;
+    }
+        
+    */
 
     public Optional<Address> getAddressById(Integer id) {
         Optional<Address> addressOpt = addressRepository.findById(id);
@@ -112,20 +124,6 @@ public class AddressService {
         ));
         return addresses;
     }
-
-    //this methos can be removed
-    public Optional<Address> findByUserAndAddress(User user, String address1, String city, String postalCode) {
-        Optional<Address> addressOpt = addressRepository.findByUserAndAddress1AndCityAndPostalCode(user, address1, city, postalCode);
-        loggingService.info("Fetched address by user and fields", Map.of(
-            "userId", String.valueOf(user.getId()),
-            "address1", address1,
-            "city", city,
-            "postalCode", postalCode,
-            "found", String.valueOf(addressOpt.isPresent())
-        ));
-        return addressOpt;
-    }
-
     // ------------------ UPDATE -----------------------
     public Optional<Address> updateAddress(Integer id, Address updatedAddress) {
         Optional<Address> addressOpt = addressRepository.findById(id);

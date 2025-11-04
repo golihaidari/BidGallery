@@ -15,7 +15,11 @@ const ArtistsPage = () => {
   const [artists, setArtists] = useState<Artist[]>([]);
 
   useEffect(() => {
-    sendRequest();
+    sendRequest(
+      { 
+      method: "GET",
+      credentials: "include", 
+    });
   }, []);
 
   useEffect(() => {

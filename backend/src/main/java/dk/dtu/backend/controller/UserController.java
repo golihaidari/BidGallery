@@ -1,26 +1,16 @@
 package dk.dtu.backend.controller;
 
 import dk.dtu.backend.persistence.entity.User;
-import dk.dtu.backend.dto.responses.AddressDTO;
-import dk.dtu.backend.persistence.entity.AccountType;
-import dk.dtu.backend.persistence.entity.Address;
-import dk.dtu.backend.security.Protected;
-import dk.dtu.backend.security.RoleProtected;
-import dk.dtu.backend.service.AddressService;
 import dk.dtu.backend.service.AuthService;
-import dk.dtu.backend.service.MetricService;
 import dk.dtu.backend.service.UserService;
-import dk.dtu.backend.utils.DtoMapper;
-import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
@@ -35,16 +25,14 @@ public class UserController {
     //// ----------------------------READ------------------------------
     // Admin can get all users
     @GetMapping
-    @Protected
-    @RoleProtected(roles = {AccountType.ADMIN})
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     // Admin can get user by email
     @GetMapping("/{email}")
-    @Protected
-    @RoleProtected(roles = {AccountType.ADMIN})
+    @PreAuthorize("hasAnyRole('ADMIN, 'CUSTOMER', 'ARTIST')")
     public ResponseEntity<?> getUser(@PathVariable String email) {
 
         Optional<User> user = userService.getUserByEmail(email);
@@ -55,8 +43,7 @@ public class UserController {
     // ----------------------------UPDATE------------------------------
     // Admin can update user by email
     @PutMapping("/{email}")
-    @Protected
-    @RoleProtected(roles = {AccountType.ADMIN, AccountType.CUSTOMER})
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ResponseEntity<?> updateUser(@PathVariable String email, @RequestBody User updatedUser) {
         try {
             Optional<User> user = userService.updateUser(email, updatedUser);
@@ -69,8 +56,7 @@ public class UserController {
     // ----------------------------DELETE------------------------------
     // Admin can delete user by email
     @DeleteMapping("/{email}")
-    @Protected
-    @RoleProtected(roles = {AccountType.ADMIN})
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable String email) {
         try {
             userService.deleteUser(email);

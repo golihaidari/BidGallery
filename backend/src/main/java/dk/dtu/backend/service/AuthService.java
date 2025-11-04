@@ -1,24 +1,23 @@
 package dk.dtu.backend.service;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 
 import dk.dtu.backend.persistence.entity.User;
-import dk.dtu.backend.persistence.entity.AccountType;
 import dk.dtu.backend.persistence.repository.UserRepository;
 import dk.dtu.backend.utils.JwtUtil;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -30,7 +29,8 @@ public class AuthService {
     private LoggingService loggingService;
 
     // ------------------------- Email/Password login -------------------------
-    public Optional<String> login(String email, String rawPassword, String requestId) {
+    public Optional<String> login(String email, String rawPassword) {
+        
         Optional<User> userOpt = userRepository.findByEmail(email);
 
         if (userOpt.isPresent()) {
@@ -38,24 +38,21 @@ public class AuthService {
             String storedPassword = user.getPassword();
 
             if (storedPassword != null && encryptPassword(rawPassword).equals(storedPassword)) {
-                String token = JwtUtil.generateToken(user.getEmail(), user.getAccountType());
+                String token = JwtUtil.generateToken(user.getEmail(), user.getAccountType(), user.getId());
                 loggingService.info("User authentication successful", Map.of(
                         "email", email,
-                        "accountType", user.getAccountType().name(),
-                        "requestId", requestId
+                        "accountType", user.getAccountType()
                 ));
                 return Optional.of(token);
             } else {
                 loggingService.warn("Authentication failed - invalid password", Map.of(
                         "email", email,
-                        "requestId", requestId,
                         "reason", "invalid_credentials"
                 ));
             }
         } else {
             loggingService.warn("Authentication failed - user not found", Map.of(
                     "email", email,
-                    "requestId", requestId,
                     "reason", "user_not_found"
             ));
         }
@@ -64,37 +61,33 @@ public class AuthService {
     }
 
     // ------------------------- Email/Password registration -------------------------
-    public boolean register(User user, String requestId) {
+    public boolean register(User user) {
         loggingService.info("User registration started", Map.of(
             "email", user.getEmail(),
-            "accountType", user.getAccountType().name(),
-            "requestId", requestId
+            "accountType", user.getAccountType()
         ));
 
         Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
         if (existingUser.isPresent()) {
             loggingService.warn("Registration failed - email already exists", Map.of(
                     "email", user.getEmail(),
-                    "requestId", requestId,
                     "reason", "duplicate_email"
             ));
             return false;
         }
 
-        if (user.getAccountType() == null){
-            user.setAccountType(AccountType.GOOGLE);
+        if (user.getAccountType() == null ){
+            user.setAccountType("GOOGLE");
             loggingService.info("Default account type assigned", Map.of(
                 "email", user.getEmail(),
-                "assignedType", "GOOGLE",
-                "requestId", requestId
+                "assignedType", "GOOGLE"
             ));
         }
 
         if (user.getPassword() != null) {
             user.setPassword(encryptPassword(user.getPassword()));
             loggingService.debug("Password encrypted for registration", Map.of(
-                "email", user.getEmail(),
-                "requestId", requestId
+                "email", user.getEmail()
             ));
         }
 
@@ -102,24 +95,21 @@ public class AuthService {
             userRepository.save(user); // cascades Artist/Address automatically
             loggingService.info("User registration completed successfully", Map.of(
                     "email", user.getEmail(),
-                    "accountType", user.getAccountType().name(),
-                    "requestId", requestId
+                    "accountType", user.getAccountType()
             ));
             return true;
         } catch (Exception e) {
             loggingService.error("User registration failed - database error", Map.of(
                     "email", user.getEmail(),
-                    "error", e.getMessage(),
-                    "requestId", requestId
+                    "error", e.getMessage()
             ));
             return false;
         }
     }
 
     // ------------------------- Firebase Google login -------------------------
-    public Optional<String> loginWithFirebase(String idToken, String requestId) {
+    public Optional<String> loginWithFirebase(String idToken) {
         loggingService.info("Firebase authentication started", Map.of(
-            "requestId", requestId,
             "authMethod", "firebase_google"
         ));
 
@@ -131,32 +121,29 @@ public class AuthService {
             User user = userOpt.orElseGet(() -> {
                 User newUser = new User();
                 newUser.setEmail(email);
-                newUser.setAccountType(AccountType.GOOGLE);
+                newUser.setAccountType("GOOGLE");
                 userRepository.save(newUser);
                 loggingService.info("New user created via Firebase authentication", Map.of(
-                        "email", email,
-                        "requestId", requestId
+                        "email", email
                 ));
                 return newUser;
             });
 
-            String token = JwtUtil.generateToken(user.getEmail(), user.getAccountType());
+            String token = JwtUtil.generateToken(user.getEmail(), user.getAccountType(), user.getId());
             loggingService.info("Firebase authentication completed successfully", Map.of(
-                    "email", email,
-                    "requestId", requestId
+                    "email", email
             ));
             return Optional.of(token);
 
         } catch (FirebaseAuthException e) {
             loggingService.error("Firebase authentication failed - token verification error", Map.of(
-                    "error", e.getMessage(),
-                    "requestId", requestId
+                    "error", e.getMessage()
             ));
             return Optional.empty();
         }
     }
 
-    // ------------------------- Helper: encrypt password -------------------------
+    // ------------------------- Helper Methods -------------------------
     private String encryptPassword(String rawPassword) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -176,25 +163,38 @@ public class AuthService {
             return null;
         }
     }
-
-    // ------------------------- Get user from JWT token -------------------------
-    public Optional<User> getUserFromToken(String token) {
-        if (token == null || token.isBlank()) return Optional.empty();
-
-        String email = JwtUtil.getEmailFromToken(token); // decode JWT
-        if (email == null) return Optional.empty();
-
-        return userRepository.findByEmail(email);
-    }
-
-    // Extract token from JWT in HttpServletRequest
-    public String getTokenFromRequest(HttpServletRequest request) {
-        String token = Arrays.stream(Optional.ofNullable(request.getCookies()).orElse(new Cookie[0]))
-                .filter(c -> "jwt".equals(c.getName()))
-                .map(Cookie::getValue)
+ 
+    //Get authenticated user and if user is not authenticated (guest) returns null
+    public User getAuthenticatedUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                
+        if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+            User user = new User();
+            user.setEmail(auth.getName()); // Get email from security context
+            
+            // Get account type from authorities
+            auth.getAuthorities().stream()
                 .findFirst()
-                .orElse(null);
-        return token;
+                .ifPresent(grantedAuthority -> {
+                    String authority = grantedAuthority.getAuthority();
+                    String roleName = authority.replace("ROLE_", "");
+                    user.setAccountType(roleName);
+                });
+
+            // Get userId from authentication details
+            if (auth.getDetails() instanceof Map) {
+                Map<?, ?> details = (Map<?, ?>) auth.getDetails();
+                Object userIdObj = details.get("userId");
+                if (userIdObj != null) {
+                    user.setId(Integer.parseInt(userIdObj.toString()));
+                }
+            }
+            
+            return user;
+        }
+        
+        System.out.println("Returning null - no valid authentication");
+        return null; // Guest user
     }
 
 }

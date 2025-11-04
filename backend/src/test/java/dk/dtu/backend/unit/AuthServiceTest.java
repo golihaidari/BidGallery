@@ -1,26 +1,32 @@
 package dk.dtu.backend.unit;
 
 import dk.dtu.backend.TestDataFactory;
-import dk.dtu.backend.persistence.entity.AccountType;
 import dk.dtu.backend.persistence.entity.User;
 import dk.dtu.backend.persistence.repository.UserRepository;
 import dk.dtu.backend.service.AuthService;
 import dk.dtu.backend.service.LoggingService;
+
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.security.core.Authentication;
 
-import jakarta.servlet.http.HttpServletRequest;
-
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
 
@@ -40,9 +46,14 @@ public class AuthServiceTest {
     @BeforeEach
     public void setup() {
         // Create test data once for all tests
-        customerUser = TestDataFactory.createUser("customer@example.com", AccountType.CUSTOMER);
-        existingUser = TestDataFactory.createUser("existing@example.com", AccountType.CUSTOMER);
-        googleUser = TestDataFactory.createUser("google@example.com", AccountType.GOOGLE);
+        customerUser = TestDataFactory.createUser("customer@example.com", "CUSTOMER");
+        existingUser = TestDataFactory.createUser("existing@example.com", "CUSTOMER");
+        googleUser = TestDataFactory.createUser("google@example.com", "GOOGLE");
+    }
+
+    @AfterEach
+    public void tearDown() {
+        SecurityContextHolder.clearContext(); // Clean up after each test
     }
 
     // =========================================================================
@@ -50,38 +61,36 @@ public class AuthServiceTest {
     // =========================================================================
 
     @Test
-    public void getTokenFromRequest_ValidCookie_ReturnsToken() {
+    public void getAuthenticatedUser_AuthenticatedUser_ReturnsUser() {
         // Arrange
-        String expectedToken = "test-jwt-token";
-        HttpServletRequest request = TestDataFactory.createRequestWithJwtCookie(expectedToken);
+        String email = "test@dtu.dk";
+        User expectedUser = new User();
+        expectedUser.setEmail(email);
+        expectedUser.setAccountType("CUSTOMER");
+        
+        // Mock Spring Security context
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+            email, null, List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        
 
         // Act
-        String result = authService.getTokenFromRequest(request);
+        User result = authService.getAuthenticatedUser();
 
         // Assert
-        assertEquals(expectedToken, result);
+        assertNotNull(result);
+        assertEquals(expectedUser.getEmail(), result.getEmail());
+        assertEquals(expectedUser.getAccountType(), result.getAccountType());
     }
 
     @Test
-    public void getTokenFromRequest_NoCookie_ReturnsNull() {
+    public void getAuthenticatedUser_GuestUser_ReturnsNull() {
         // Arrange
-        HttpServletRequest request = TestDataFactory.createRequestWithoutCookies();
+        SecurityContextHolder.clearContext(); // No authentication
 
         // Act
-        String result = authService.getTokenFromRequest(request);
-
-        // Assert
-        assertNull(result);
-    }
-
-    @Test
-    public void getTokenFromRequest_NullCookies_ReturnsNull() {
-        // Arrange
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        when(request.getCookies()).thenReturn(null);
-
-        // Act
-        String result = authService.getTokenFromRequest(request);
+        User result = authService.getAuthenticatedUser();
 
         // Assert
         assertNull(result);
@@ -92,15 +101,12 @@ public class AuthServiceTest {
     // =========================================================================
 
     @Test
-    public void register_NewCustomer_ReturnsTrueAndSavesUser() {
-        // Arrange
-        String requestId = "test-request-123";
-        
+    public void register_NewCustomer_ReturnsTrueAndSavesUser() {        
         when(userRepository.findByEmail(customerUser.getEmail())).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenReturn(customerUser);
 
         // Act
-        boolean result = authService.register(customerUser, requestId);
+        boolean result = authService.register(customerUser);
 
         // Assert
         assertTrue(result, "Registration should succeed for new customer");
@@ -111,14 +117,11 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void register_ExistingEmail_ReturnsFalse() {
-        // Arrange
-        String requestId = "test-request-456";
-        
+    public void register_ExistingEmail_ReturnsFalse() {        
         when(userRepository.findByEmail(existingUser.getEmail())).thenReturn(Optional.of(existingUser));
 
         // Act
-        boolean result = authService.register(existingUser, requestId);
+        boolean result = authService.register(existingUser);
 
         // Assert
         assertFalse(result, "Registration should fail for existing email");
@@ -130,15 +133,13 @@ public class AuthServiceTest {
 
     @Test
     public void register_GoogleAccount_NoPassword_Success() {
-        // Arrange
-        String requestId = "test-request-555";
         
         googleUser.setEmail("newEmail@test.com");
         when(userRepository.findByEmail(googleUser.getEmail())).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenReturn(googleUser);
 
         // Act
-        boolean result = authService.register(googleUser, requestId);
+        boolean result = authService.register(googleUser);
 
         // Assert
         assertTrue(result, "Google account registration should succeed without password");
@@ -150,12 +151,11 @@ public class AuthServiceTest {
         // Arrange
         String email = "nonexistent@example.com";
         String password = "anyPassword";
-        String requestId = "test-request-999";
         
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
         // Act
-        Optional<String> result = authService.login(email, password, requestId);
+        Optional<String> result = authService.login(email, password);
 
         // Assert
         assertFalse(result.isPresent(), "Should return empty for non-existent user");
@@ -163,13 +163,10 @@ public class AuthServiceTest {
 
     @Test
     public void login_ValidCredentials_CallsRepository() {
-        // Arrange
-        String requestId = "test-request-789";
-        
         when(userRepository.findByEmail(customerUser.getEmail())).thenReturn(Optional.of(customerUser));
 
         // Act
-        authService.login(customerUser.getEmail(), customerUser.getPassword(), requestId);
+        authService.login(customerUser.getEmail(), customerUser.getPassword());
 
         // Assert - Verify the flow is called
         verify(userRepository).findByEmail(customerUser.getEmail());

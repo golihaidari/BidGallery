@@ -1,23 +1,27 @@
 package dk.dtu.backend.controller;
 
-import dk.dtu.backend.persistence.entity.Artist;
-import dk.dtu.backend.dto.responses.ArtistDTO;
-import dk.dtu.backend.dto.responses.ProductDTO;
-import dk.dtu.backend.persistence.entity.AccountType;
-import dk.dtu.backend.security.Protected;
-import dk.dtu.backend.security.RoleProtected;
-import dk.dtu.backend.service.ArtistService;
-import dk.dtu.backend.service.MetricService;
-import dk.dtu.backend.utils.DtoMapper;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import dk.dtu.backend.dto.responses.ArtistDTO;
+import dk.dtu.backend.persistence.entity.Artist;
+import dk.dtu.backend.service.ArtistService;
+import dk.dtu.backend.service.MetricService;
+import dk.dtu.backend.utils.DtoMapper;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/artists")
@@ -32,28 +36,31 @@ public class ArtistController {
     // ------------------- READ ------------------------------
     // Get all artists 
     @GetMapping
-    @Protected
-    @RoleProtected(roles = {AccountType.ADMIN, AccountType.CUSTOMER})
-    public ResponseEntity<List<ArtistDTO>> getAllArtists() {
-        long startTime = System.currentTimeMillis();
-        String requestId = UUID.randomUUID().toString();
+    public ResponseEntity<List<ArtistDTO>> getAllArtists(HttpServletRequest httpRequest) {
 
-        List<Artist> artists = artistService.getAllArtists(requestId);
+        String correlationId = (String) httpRequest.getAttribute("correlationId"); // For business
+
+        long startTime = System.currentTimeMillis();
+
+        List<Artist> artists = artistService.getAllArtists();
 
                 // Map Product entities to ProductDTO
         List<ArtistDTO> artistDTOs = DtoMapper.toArtistDTOList(artists);
 
         long duration = System.currentTimeMillis() - startTime;
-        metricService.incrementCounter("artists.all.fetch", "success", "true");
-        metricService.recordDuration("artists.all.duration", duration, "success", "true");
+        metricService.incrementCounter("artists.all.fetch", 
+        "success", "true",
+            "correlationId", correlationId);
+        metricService.recordDuration("artists.all.duration", duration, 
+        "success", "true",
+            "correlationId", correlationId);
 
         return ResponseEntity.ok(artistDTOs);
     }
 
     // Get Single Artist 
     @GetMapping("/{id}")
-    @Protected
-    @RoleProtected(roles = {AccountType.ADMIN, AccountType.ARTIST})
+    @PreAuthorize("hasAnyRole('ADMIN', 'ARTIST')")
     public ResponseEntity<?> getArtist(@PathVariable Integer id) {
         Optional<Artist> artistOpt = artistService.getArtistById(id);
         if (artistOpt.isEmpty()) {
@@ -64,8 +71,7 @@ public class ArtistController {
 
     // ------------------- Update------------------------------
     @PutMapping("/{id}")
-    @Protected
-    @RoleProtected(roles = {AccountType.ARTIST})
+    @PreAuthorize("hasAnyRole('ADMIN', 'ARTIST')")
     public ResponseEntity<?> updateArtist(@PathVariable Integer id, @RequestBody Artist updated) {
 
         Optional<Artist> artistOpt = artistService.updateArtist(id, updated);
@@ -77,8 +83,7 @@ public class ArtistController {
 
     // ------------------- DELETE------------------------------
     @DeleteMapping("/{id}")
-    @Protected
-    @RoleProtected(roles = {AccountType.ADMIN, AccountType.ARTIST})
+    @PreAuthorize("hasAnyRole('ADMIN', 'ARTIST')")
     public ResponseEntity<?> deleteArtist(@PathVariable Integer id) {
         Optional<Artist> artistOpt = artistService.getArtistById(id);
         if (artistOpt.isEmpty()) {

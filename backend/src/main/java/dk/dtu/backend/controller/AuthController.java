@@ -1,14 +1,27 @@
 package dk.dtu.backend.controller;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Pattern;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import dk.dtu.backend.dto.LoginRequestFirebase;
 import dk.dtu.backend.dto.RegisterRequest;
 import dk.dtu.backend.dto.responses.AddressDTO;
-import dk.dtu.backend.persistence.entity.AccountType;
 import dk.dtu.backend.persistence.entity.Address;
 import dk.dtu.backend.persistence.entity.Artist;
 import dk.dtu.backend.persistence.entity.User;
-import dk.dtu.backend.security.Protected;
-import dk.dtu.backend.security.RoleProtected;
 import dk.dtu.backend.service.AddressService;
 import dk.dtu.backend.service.AuthService;
 import dk.dtu.backend.service.MetricService;
@@ -16,15 +29,6 @@ import dk.dtu.backend.utils.CookieUtil;
 import dk.dtu.backend.utils.DtoMapper;
 import dk.dtu.backend.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.*;
-import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -41,155 +45,169 @@ public class AuthController {
 
     // ----------------------------REGISTER------------------------------
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
 
-        String requestId = UUID.randomUUID().toString();
+        String correlationId = (String) httpRequest.getAttribute("correlationId"); // For business
+
         long startTime = System.currentTimeMillis();
 
         User user = request.getUser();
+        user.setAccountType(user.getAccountType().toUpperCase());
         Artist artist = request.getArtist();
         Address address = request.getAddress();
 
         // Basic validation
         if (user.getEmail() == null || !isValidEmail(user.getEmail())) {
-            metricService.incrementCounter("auth.register", "success", "false", "reason", "invalid_email");
-            metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, "success", "false");
+            metricService.incrementCounter("auth.register", 
+            "success", "false",
+             "reason", "invalid_email",
+            "correlationId", correlationId);
+            metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, 
+            "success", "false",
+            "correlationId", correlationId);
             
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "error", "Invalid email format",
-                    "requestId", requestId
+                    "error", "Invalid email format"
             ));
         }
         if (user.getPassword() == null || user.getPassword().length() < 8) {
 
-            metricService.incrementCounter("auth.register", "success", "false", "reason", "invalid_password");
-            metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, "success", "false");
+            metricService.incrementCounter("auth.register", 
+            "success", "false",
+             "reason", "invalid_password",
+            "correlationId", correlationId);
+            metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, 
+            "success", "false",
+            "correlationId", correlationId);
             
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "error", "Password must be at least 8 characters",
-                    "requestId", requestId
+                    "error", "Password must be at least 8 characters"
             ));
         }
 
         // Link Artist / Address if provided
-        if(user.getAccountType() == AccountType.ARTIST){
+        if(user.getAccountType().equals("ARTIST")){
             if (artist == null){
 
-                metricService.incrementCounter("auth.register", "success", "false", "reason", "missing_artist");
-                metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, "success", "false");
+                metricService.incrementCounter("auth.register", 
+                "success", "false", 
+                "reason", "missing_artist",
+                "correlationId", correlationId);
+                metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, 
+                "success", "false",
+                "correlationId", correlationId);
 
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "error", "Artist fields are required",
-                    "requestId", requestId
+                    "error", "Artist fields are required"
                 ));
             }
             artist.setUser(user);
             user.setArtist(artist);
         }
-        else if(user.getAccountType()== AccountType.CUSTOMER){
+        else if(user.getAccountType().equals( "CUSTOMER")){
             if (address == null) {
 
-                metricService.incrementCounter("auth.register", "success", "false", "reason", "missing_address");
-                metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, "success", "false");
+                metricService.incrementCounter("auth.register", 
+                "success", "false",
+                 "reason", "missing_address",
+                "correlationId", correlationId);
+                metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, 
+                "success", "false",
+                "correlationId", correlationId);
 
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "error", "address fields are required",
-                    "requestId", requestId
+                    "error", "address fields are required"
                 ));
             }
             address.setUser(user);
             user.setAddresses(List.of(address));
         }
 
-        /*
-        if (artist != null) {
-            artist.setUser(user);
-            user.setArtist(artist);
-        }
-        if (address != null) {
-            address.setUser(user);
-            user.setAddresses(List.of(address));
-        }*/
-
         // Save user (service handles logging internally)
-        boolean success = authService.register(user, requestId);
+        boolean success = authService.register(user);
         if (!success) {
             
-            metricService.incrementCounter("auth.register", "success", "false", "reason", "duplicate_or_db_error");
-            metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, "success", "false");
+            metricService.incrementCounter("auth.register", 
+            "success", "false", 
+            "reason", "duplicate_or_db_error",
+            "correlationId", correlationId);
+            metricService.recordDuration("auth.register.duration", System.currentTimeMillis() - startTime, 
+            "success", "false",
+            "correlationId", correlationId);
             
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "error", "Email already registered or DB error",
-                    "requestId", requestId
+                    "error", "Email already registered or DB error"
             ));
         }
 
         long duration = System.currentTimeMillis() - startTime;
-        metricService.incrementCounter("auth.register", "success", "true");
-        metricService.recordDuration("auth.register.duration", duration, "success", "true");
-
-        // Generate JWT
-        String token = JwtUtil.generateToken(user.getEmail(), user.getAccountType());
-        ResponseCookie cookie = CookieUtil.createJwtCookie(token);
+        metricService.incrementCounter("auth.register", 
+        "success", "true",
+            "correlationId", correlationId);
+        metricService.recordDuration("auth.register.duration", duration, 
+        "success", "true",
+            "correlationId", correlationId);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                //.header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(Map.of(
                         "success", true,
                         "message", "User registered successfully and logged in",
-                        "email", user.getEmail(),
-                        "requestId", requestId
+                        "email", user.getEmail()
                 ));
     }
 
     //------------------------------retrive address for the registered users----------------------
     @GetMapping("/address")
-    @Protected
-    @RoleProtected(roles = {AccountType.CUSTOMER})
-    public ResponseEntity<?> getMyAddress(HttpServletRequest request) {
+    @PreAuthorize("isAuthenticated() and hasRole('CUSTOMER')")
+    public ResponseEntity<?> getMyAddress(HttpServletRequest httpRequest) {
+
+        String correlationId = (String) httpRequest.getAttribute("correlationId"); // For business
 
         long startTime = System.currentTimeMillis();
-        String requestId = UUID.randomUUID().toString();
-
-        // Extract token from HttpOnly cookie
-        String token = authService.getTokenFromRequest(request);
-
-        if (token == null) {
-            metricService.incrementCounter("auth.address.fetch", "success", "false", "reason", "no_token");
-            metricService.recordDuration("auth.address.fetch.duration", System.currentTimeMillis() - startTime, "success", "false");
-
-            return ResponseEntity.status(401).body("No token found");            
-        }
-
-        // Identify user using your AuthService
-        Optional<User> userOpt = authService.getUserFromToken(token);
-        if (userOpt.isEmpty()) {
-            metricService.incrementCounter("auth.address.fetch", "success", "false", "reason", "invalid_token");
-            metricService.recordDuration("auth.address.fetch.duration", System.currentTimeMillis() - startTime, "success", "false");
+        
+        User user = authService.getAuthenticatedUser();
+        
+        if (user == null) {
+            metricService.incrementCounter("auth.address.fetch", 
+            "success", "false", 
+            "reason", "invalid_token",
+            "correlationId", correlationId);
+            metricService.recordDuration("auth.address.fetch.duration", System.currentTimeMillis() - startTime, 
+            "success", "false",
+            "correlationId", correlationId);
             
             return ResponseEntity.status(402).body("Invalid token");
         }
 
-        User user = userOpt.get();
-
+        
         // Fetch address by user ID
-        Optional<Address> addressOpt = addressService.getUserAddress(user.getId(), requestId);
+        Optional<Address> addressOpt = addressService.getUserAddress(user.getId());
 
         if(addressOpt.isEmpty()){
-            metricService.incrementCounter("auth.address.fetch", "success", "false", "reason", "no_address");
-            metricService.recordDuration("auth.address.fetch.duration", System.currentTimeMillis() - startTime, "success", "false");
+            metricService.incrementCounter("auth.address.fetch", 
+            "success", "false",
+             "reason", "no_address",
+            "correlationId", correlationId);
+            metricService.recordDuration("auth.address.fetch.duration", System.currentTimeMillis() - startTime, 
+            "success", "false",
+            "correlationId", correlationId);
 
             return ResponseEntity.status(403).body("No address found");
         }
 
         long duration = System.currentTimeMillis() - startTime;
-        metricService.incrementCounter("auth.address.fetch", "success", "true");
-        metricService.recordDuration("auth.address.fetch.duration", duration, "success", "true");
+        metricService.incrementCounter("auth.address.fetch", 
+        "success", "true",
+            "correlationId", correlationId);
+        metricService.recordDuration("auth.address.fetch.duration", duration, 
+        "success", "true",
+            "correlationId", correlationId);
 
         // Map to DTO and return
         AddressDTO addressDTO = DtoMapper.toAddressDTO(addressOpt.get());
@@ -198,39 +216,54 @@ public class AuthController {
 
     // -----------------------------EMAIL/PASSWORD LOGIN-----------------------------
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
-        String requestId = UUID.randomUUID().toString();
+    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials, 
+                                                    HttpServletRequest httpRequest) {
+        
+        String correlationId = (String) httpRequest.getAttribute("correlationId"); // For business
+
         long startTime = System.currentTimeMillis();
 
         String email = credentials.get("email");
         String password = credentials.get("password");
 
         if (email == null || password == null || email.isEmpty() || password.isEmpty()) {
-            metricService.incrementCounter("auth.login", "success", "false", "reason", "missing_credentials");
-            metricService.recordDuration("auth.login.duration", System.currentTimeMillis() - startTime, "success", "false");
+            metricService.incrementCounter("auth.login", 
+            "success", "false",
+            "reason", "missing_credentials",
+            "correlationId", correlationId);
+            metricService.recordDuration("auth.login.duration", System.currentTimeMillis() - startTime, 
+            "success", "false",
+            "correlationId", correlationId);
 
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "error", "Email and password are required",
-                    "requestId", requestId
+                    "error", "Email and password are required"
             ));
         }
 
-        Optional<String> tokenOpt = authService.login(email, password, requestId);
+        Optional<String> tokenOpt = authService.login(email, password);
         if (tokenOpt.isEmpty()) {
-            metricService.incrementCounter("auth.login", "success", "false", "reason", "invalid_credentials");
-            metricService.recordDuration("auth.login.duration", System.currentTimeMillis() - startTime, "success", "false");
+            metricService.incrementCounter("auth.login", 
+            "success", "false", 
+            "reason", "invalid_credentials",
+            "correlationId", correlationId);
+            metricService.recordDuration("auth.login.duration", System.currentTimeMillis() - startTime, 
+            "success", "false",
+            "correlationId", correlationId);
 
             return ResponseEntity.status(401).body(Map.of(
                     "success", false,
-                    "error", "Invalid credentials",
-                    "requestId", requestId
+                    "error", "Invalid credentials"
             ));
         }
 
         long duration = System.currentTimeMillis() - startTime;
-        metricService.incrementCounter("auth.login", "success", "true");
-        metricService.recordDuration("auth.login.duration", duration, "success", "true");
+        metricService.incrementCounter("auth.login", 
+        "success", "true",
+            "correlationId", correlationId);
+        metricService.recordDuration("auth.login.duration", duration, 
+        "success", "true",
+            "correlationId", correlationId);
 
         ResponseCookie cookie = CookieUtil.createJwtCookie(tokenOpt.get());
         return ResponseEntity.ok()
@@ -238,45 +271,57 @@ public class AuthController {
                 .body(Map.of(
                         "success", true,
                         "message", "Login successful",
-                        "email", email,
-                        "requestId", requestId
+                        "email", email
                 ));
     }
 
     // -----------------------------FIREBASE LOGIN-----------------------------
     @PostMapping("/login/firebase")
-    public ResponseEntity<?> loginWithFirebase(@RequestBody LoginRequestFirebase request) {
-        String requestId = UUID.randomUUID().toString();
+    public ResponseEntity<?> loginWithFirebase(@RequestBody LoginRequestFirebase request, HttpServletRequest httpRequest) {
+        String correlationId = (String) httpRequest.getAttribute("correlationId"); // For business
+
         long startTime = System.currentTimeMillis();
 
         String idToken = request.getToken();
 
         if (idToken == null || idToken.isBlank()) {
-            metricService.incrementCounter("auth.login.firebase", "success", "false", "reason", "missing_token");
-            metricService.recordDuration("auth.login.firebase.duration", System.currentTimeMillis() - startTime, "success", "false");
+            metricService.incrementCounter("auth.login.firebase", 
+            "success", "false", 
+            "reason", "missing_token",
+            "correlationId", correlationId);
+            metricService.recordDuration("auth.login.firebase.duration", System.currentTimeMillis() - startTime, 
+            "success", "false",
+            "correlationId", correlationId);
 
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "error", "Missing idToken",
-                    "requestId", requestId
+                    "error", "Missing idToken"
             ));
         }
 
-        Optional<String> tokenOpt = authService.loginWithFirebase(idToken, requestId);
+        Optional<String> tokenOpt = authService.loginWithFirebase(idToken);
         if (tokenOpt.isEmpty()) {
-            metricService.incrementCounter("auth.login.firebase", "success", "false", "reason", "invalid_token");
-            metricService.recordDuration("auth.login.firebase.duration", System.currentTimeMillis() - startTime, "success", "false");
+            metricService.incrementCounter("auth.login.firebase", 
+            "success", "false", 
+            "reason", "invalid_token",
+            "correlationId", correlationId);
+            metricService.recordDuration("auth.login.firebase.duration", System.currentTimeMillis() - startTime,
+             "success", "false",
+             "correlationId", correlationId);
 
             return ResponseEntity.status(401).body(Map.of(
                     "success", false,
-                    "error", "Invalid Firebase token",
-                    "requestId", requestId
+                    "error", "Invalid Firebase token"
             ));
         }
 
         long duration = System.currentTimeMillis() - startTime;
-        metricService.incrementCounter("auth.login.firebase", "success", "true");
-        metricService.recordDuration("auth.login.firebase.duration", duration, "success", "true");
+        metricService.incrementCounter("auth.login.firebase", 
+        "success", "true",
+        "correlationId", correlationId);
+        metricService.recordDuration("auth.login.firebase.duration", duration, 
+        "success", "true",
+        "correlationId", correlationId);
 
         ResponseCookie cookie = CookieUtil.createJwtCookie(tokenOpt.get());
         return ResponseEntity.ok()
@@ -284,24 +329,25 @@ public class AuthController {
                 .body(Map.of(
                         "success", true,
                         "email", JwtUtil.getEmailFromToken(tokenOpt.get()),
-                        "message", "Login successful",
-                        "requestId", requestId
+                        "message", "Login successful"
                 ));
     }
 
     // -----------------------------LOGOUT-----------------------------
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        String requestId = UUID.randomUUID().toString();
-        metricService.incrementCounter("auth.logout", "success", "true");
+    public ResponseEntity<?> logout(HttpServletRequest httpRequest) {
+        String correlationId = (String) httpRequest.getAttribute("correlationId"); // For business
+
+        metricService.incrementCounter("auth.logout", 
+        "success", "true",
+        "correlationId", correlationId);
 
         ResponseCookie cookie = CookieUtil.clearJwtCookie();
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(Map.of(
                         "success", true,
-                        "message", "Logged out successfully",
-                        "requestId", requestId
+                        "message", "Logged out successfully"
                 ));
     }
 

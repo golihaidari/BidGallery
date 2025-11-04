@@ -1,0 +1,74 @@
+@startuml backend_architecture 
+
+!define RECTANGLE class
+skinparam defaultFontName Arial
+skinparam roundCorner 10
+skinparam classBackgroundColor White
+skinparam classBorderColor Black
+skinparam shadowing false
+
+' --- Backend layers ---
+package "c3) Backend (Server)" #LightYellow {
+  rectangle "1) Controller Layer" as Controllers #LightCyan{
+    rectangle "Auth Endpoint: \n-register \n-login \n-logout" as AuthCtrl  #Pink
+    rectangle "Other Endpoints" as OtherCtrl #Pink
+    rectangle "checkout Endpoint: \n-placebid \nplaceorder" as CheckoutCtrl #Pink
+  }
+  rectangle "2) Service Layer" as Services #LightCyan {
+    rectangle "2.1) Business Logic" as BusinessSer  #LightBlue{
+      rectangle "Auth Service" as AuthSer #Pink
+      rectangle "Users, \n Artists,\nAddresses, \nProducts, \nOrders" as OtherSer #Pink
+      rectangle "Payment Service"as PaymentSer #Pink
+    }
+
+    rectangle "2.2) observationService" as obs #LightBlue{
+      rectangle "LoggingService" as LogSer #Pink
+      rectangle "MetricService" as MetricSer #Pink
+    }
+  }
+
+  rectangle "3) Repository Layer \nDatabase Access (MariaDB CRUD)" as Repo #LightCyan{
+    rectangle "User, Artists, Address, Products, Order, OrderItems" #Pink  
+  }
+ 
+  database "4) MariaDB\nUsers, Artists, Addresses, Products, Orders" as DB #Pink
+
+  rectangle "5) Observability Stack" #LightCyan{
+    rectangle "5.1) Grafana\n(Dashboards + Explore)" as Grafana #Pink
+    rectangle "5.2) Prometheus\n(Metrics Storage)" as Prometheus #Pink
+    rectangle "5.3) Loki\n(Log Aggregation)" as Loki #Pink
+  }
+}
+
+  ' --- External services ---
+rectangle "External Services" #LightYellow{
+  rectangle "d) External Identity Provider\n(OAuth)" as IdP #Pink
+  rectangle "e) External Payment API \n(Pipedream Mock)" as Payment #Pink
+}
+
+
+' --- Connections (two-way implied) ---
+Controllers --> MetricSer: Metrics
+BusinessSer --> LogSer: Logs
+
+OtherCtrl --> OtherSer
+CheckoutCtrl --> OtherSer
+CheckoutCtrl --> PaymentSer
+CheckoutCtrl --> AuthSer
+AuthCtrl --> AuthSer
+
+MetricSer ..> Prometheus : Exposes metrics via\n/actuator/prometheus
+LogSer ..> Loki : Streams JSON logs with\nstructured fields & correlationId
+
+AuthSer--> Repo : query / return data
+OtherSer --> Repo : query / return data
+Repo --> DB : read/write
+PaymentSer --> Payment : call / response
+AuthSer --> IdP : verify token / result
+
+' **OBSERVABILITY STACK**
+Prometheus -- Grafana : Metrics dashboards\n(bid success rates, durations)
+Loki -- Grafana : Log exploration\n(correlation tracing, error analysis)
+
+
+@enduml

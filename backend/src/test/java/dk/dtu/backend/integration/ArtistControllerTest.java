@@ -1,6 +1,8 @@
 package dk.dtu.backend.integration;
 
+import dk.dtu.backend.TestApplication;
 import dk.dtu.backend.TestDataFactory;
+import dk.dtu.backend.TestSecurityConfig;
 import dk.dtu.backend.persistence.entity.*;
 import dk.dtu.backend.persistence.repository.ArtistRepository;
 import dk.dtu.backend.persistence.repository.UserRepository;
@@ -11,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -18,7 +21,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    classes = TestApplication.class, 
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
+@Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
 public class ArtistControllerTest {
 
@@ -51,19 +58,19 @@ public class ArtistControllerTest {
 
         // Create and save a test customer user
         customerEmail = "artist_customer_" + System.currentTimeMillis() + "@example.com";
-        User customer = TestDataFactory.createUser(customerEmail, AccountType.CUSTOMER);
+        User customer = TestDataFactory.createUser(customerEmail, "CUSTOMER");
         User savedCustomer = userRepository.save(customer);
-        customerJwtToken = JwtUtil.generateToken(customerEmail, AccountType.CUSTOMER);
+        customerJwtToken = JwtUtil.generateToken(customerEmail, "CUSTOMER", savedCustomer.getId());
 
         // Create and save multiple artists
-        User artist1User = TestDataFactory.createUser("artist1@example.com", AccountType.ARTIST);
+        User artist1User = TestDataFactory.createUser("artist1@example.com", "ARTIST");
         User savedArtist1User = userRepository.save(artist1User);
         Artist artist1 = TestDataFactory.createArtist(savedArtist1User);
         artist1.setFirstName("Anna");
         artist1.setLastName("Larsen");
         artistRepository.save(artist1);
 
-        User artist2User = TestDataFactory.createUser("artist2@example.com", AccountType.ARTIST);
+        User artist2User = TestDataFactory.createUser("artist2@example.com", "ARTIST");
         User savedArtist2User = userRepository.save(artist2User);
         Artist artist2 = TestDataFactory.createArtist(savedArtist2User);
         artist2.setFirstName("Bjorn");

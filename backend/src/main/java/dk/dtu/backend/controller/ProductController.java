@@ -1,21 +1,27 @@
 package dk.dtu.backend.controller;
 
-import dk.dtu.backend.persistence.entity.Product;
-import dk.dtu.backend.dto.responses.ProductDTO;
-import dk.dtu.backend.persistence.entity.AccountType;
-import dk.dtu.backend.security.Protected;
-import dk.dtu.backend.security.RoleProtected;
-import dk.dtu.backend.service.MetricService;
-import dk.dtu.backend.service.ProductService;
-import dk.dtu.backend.utils.DtoMapper;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import dk.dtu.backend.dto.responses.ProductDTO;
+import dk.dtu.backend.persistence.entity.Product;
+import dk.dtu.backend.service.AuthService;
+import dk.dtu.backend.service.MetricService;
+import dk.dtu.backend.service.ProductService;
+import dk.dtu.backend.utils.DtoMapper;
 
 @RestController
 @RequestMapping("/api/products")
@@ -24,13 +30,15 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
+    @Autowired 
+    private AuthService authService;
+
     @Autowired
     private MetricService metricService;
 
     // ----------------------------CREATE ------------------------------
-   @PostMapping
-    @Protected
-    @RoleProtected(roles = {AccountType.ARTIST})
+    @PostMapping
+    @PreAuthorize("hasRole('ARTIST')")
     public ResponseEntity<?> createProduct(
             @RequestBody Product product,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
@@ -47,7 +55,7 @@ public class ProductController {
         }
 
         // Save product via service, which now handles logging
-        Product saved = productService.saveProduct(product, userEmail, requestId);
+        Product saved = productService.saveProduct(product);
 
         if (saved == null) {
             return ResponseEntity.status(500)
@@ -77,9 +85,9 @@ public class ProductController {
     @GetMapping("/available")
     public ResponseEntity<List<ProductDTO>> getAvailableProducts() {
         long startTime = System.currentTimeMillis();
-        String requestId = UUID.randomUUID().toString();
 
-        List<Product> products = productService.getAvailableProducts(requestId); 
+        //User user = authService.getAuthenticatedUser();
+        List<Product> products = productService.getAvailableProducts(); 
 
         // Map Product entities to ProductDTO
         List<ProductDTO> productDTOs = DtoMapper.toProductDTOList(products);
@@ -115,8 +123,7 @@ public class ProductController {
 
     // ----------------------------UPDATE------------------------------
     @PutMapping("/{id}")
-    @Protected
-    @RoleProtected(roles = {AccountType.ADMIN, AccountType.ARTIST})
+    @PreAuthorize("hasAnyRole('ADMIN', 'ARTIST')")
     public ResponseEntity<?> updateProduct(@PathVariable Integer id, @RequestBody Product updatedProduct) {
 
         // Validate required fields
@@ -144,8 +151,7 @@ public class ProductController {
 
     // ----------------------------DELETE------------------------------
     @DeleteMapping("/{id}")
-    @Protected
-    @RoleProtected(roles = {AccountType.ADMIN, AccountType.ARTIST})
+    @PreAuthorize("hasAnyRole('ADMIN', 'ARTIST')")
     public ResponseEntity<?> deleteProduct(@PathVariable Integer id) {
         if (productService.deleteProduct(id)) {
             return ResponseEntity.ok(Map.of("message", "Product deleted"));

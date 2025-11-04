@@ -1,11 +1,11 @@
 package dk.dtu.backend.service;
 
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 import org.slf4j.MDC;
-
-import java.util.Map;
+import org.springframework.stereotype.Service;
 
 @Service
 public class LoggingService {

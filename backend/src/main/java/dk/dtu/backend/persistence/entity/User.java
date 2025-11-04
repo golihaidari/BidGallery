@@ -27,9 +27,8 @@ public class User {
     private String password;
 
     @NotNull(message = "Account type is required")
-    @Enumerated(EnumType.STRING)
     @Column(name = "account_type", nullable = false)
-    private AccountType accountType;
+    private String accountType;
 
     // Relationships
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
@@ -44,7 +43,7 @@ public class User {
     // Constructors
     public User() {}
 
-    public User(String email, String password, AccountType accountType) {
+    public User(String email, String password, String accountType) {
         this.email = email;
         this.password = password;
         this.accountType = accountType;
@@ -60,8 +59,8 @@ public class User {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
-    public AccountType getAccountType() { return accountType; }
-    public void setAccountType(AccountType accountType) { this.accountType = accountType; }
+    public String getAccountType() { return accountType; }
+    public void setAccountType(String accountType) { this.accountType = accountType; }
 
     public Artist getArtist() { return artist; }
     public void setArtist(Artist artist) { this.artist = artist; }

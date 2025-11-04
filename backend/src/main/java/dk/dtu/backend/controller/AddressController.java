@@ -1,14 +1,12 @@
 package dk.dtu.backend.controller;
 
 import dk.dtu.backend.persistence.entity.Address;
-import dk.dtu.backend.persistence.entity.AccountType;
-import dk.dtu.backend.security.Protected;
-import dk.dtu.backend.security.RoleProtected;
 import dk.dtu.backend.service.AddressService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -21,24 +19,21 @@ public class AddressController {
 
     // -------------------CREATE------------------------------
     @PostMapping
-    @Protected
-    @RoleProtected(roles = {AccountType.ADMIN, AccountType.CUSTOMER})
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ResponseEntity<Address> createAddress(@RequestBody Address address) {
         return ResponseEntity.ok(addressService.saveAddress(address));
     }
 
      // -------------------READ------------------------------
     @GetMapping
-    @Protected
-    @RoleProtected(roles = {AccountType.ADMIN})
+    @PreAuthorize("hasRole('Admin')")
     public ResponseEntity<List<Address>> getAllAddresses() {
         return ResponseEntity.ok(addressService.getAllAddresses());
     }
 
     // -------------------UPDATE------------------------------
     @PutMapping("/{id}")
-    @Protected
-    @RoleProtected(roles = {AccountType.ADMIN, AccountType.CUSTOMER})
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ResponseEntity<?> updateAddress(@PathVariable Integer id, @RequestBody Address updated) {
         try {
             return ResponseEntity.ok(addressService.updateAddress(id, updated));
@@ -49,8 +44,7 @@ public class AddressController {
 
     // -------------------DELETE------------------------------
     @DeleteMapping("/{id}")
-    @Protected
-    @RoleProtected(roles = {AccountType.ADMIN, AccountType.CUSTOMER})
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ResponseEntity<?> deleteAddress(@PathVariable Integer id) {
         try {
             addressService.deleteAddress(id);

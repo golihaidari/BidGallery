@@ -19,7 +19,12 @@ const Products = () => {
   const navigate = useNavigate();
   const { searchTerm } = useOutletContext<OutletContext>();
 
-  useEffect(() => { sendRequest(); }, []);
+  useEffect(() => { 
+    sendRequest({ 
+      method: "GET",
+      credentials: "include", 
+    }); 
+  }, []);
   useEffect(() => { if (data) setProducts(data); }, [data]);
 
   const handleBid = (product: Product, e: React.FormEvent) => {

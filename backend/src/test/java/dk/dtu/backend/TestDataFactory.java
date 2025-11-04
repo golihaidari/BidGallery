@@ -18,7 +18,7 @@ public class TestDataFactory {
     // USERS (Essential for AuthService and OrderService)
     // =========================================================================
 
-    public static User createUser(String email, AccountType accountType) {
+    public static User createUser(String email, String accountType) {
         return new User(email, "password123", accountType);
     }
 
