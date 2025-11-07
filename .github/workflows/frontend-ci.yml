@@ -1,11 +1,8 @@
 name: Frontend CI
 
 on:
-  pull_request:
-    branches: [staging]
-    paths: ['frontend/**']
   push:
-    branches: [dev, staging] 
+    branches: [dev] 
     paths: ['frontend/**']
 
 jobs:
@@ -35,8 +32,9 @@ jobs:
       run: npm run build
       working-directory: ./frontend
       
-    - name: Build and push Docker image
+    - name: Build and push Docker image      
       run: |
         docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }} -f frontend/Dockerfile ./frontend
         echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }}
+        
