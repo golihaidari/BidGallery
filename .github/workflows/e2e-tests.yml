@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: ["Frontend CI", "Backend CI"]
     types: [completed]
-    branches: [staging]
+    branches: [staging, dev]
 
 jobs:
   e2e-tests:
