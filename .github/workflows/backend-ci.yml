@@ -41,8 +41,4 @@ jobs:
         cd backend
         mvn clean package -DskipTests
         
-    - name: Build and push Docker image
-      run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }} -f backend/Dockerfile ./backend
-        echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }}
+    
