@@ -8,7 +8,7 @@ import FormValidator from "@utils/UserFormValidator";
 
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../firebase/firebase.tsx";
-import { API_URL } from "../config.tsx";
+import { API_CONFIG } from "../config.tsx";
 
 interface LoginResponse {
   success: boolean;
@@ -35,7 +35,7 @@ export default function Login() {
     isLoading: loginLoading,
     error: loginError,
     status: loginStatus,
-  } = useFetch<LoginResponse>(`${API_URL}/api/auth/login`);
+  } = useFetch<LoginResponse>(`${API_CONFIG.baseURL}/auth/login`);
 
   const {
     sendRequest: sendGoogleRequest,
@@ -43,7 +43,7 @@ export default function Login() {
     isLoading: googleLoading,
     error: googleError,
     status: googleStatus,
-  } = useFetch<LoginResponse>(`${API_URL}/api/auth/login/firebase`);
+  } = useFetch<LoginResponse>(`${API_CONFIG.baseURL}/auth/login/firebase`);
 
   // -----------------------------
   // Email/password login

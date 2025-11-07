@@ -7,7 +7,7 @@ import FormTemplate from "@components/common/FormTemplate.tsx";
 import FormValidator, { type FormValues } from "@utils/UserFormValidator";
 import { useNavigate } from "react-router-dom";
 import useFetch from "@hook/fetchData";
-import { API_URL } from "../config.tsx";
+import { API_CONFIG } from "../config.tsx";
 import { useAuth } from "@context/AuthContext.tsx";
 
 // Sorted country list
@@ -36,7 +36,7 @@ export default function ShippingAddress() {
 
   // --- useFetch hook for user data ---
   const { sendRequest, data: userData, error } =
-    useFetch<{ address?: Address }>(`${API_URL}/api/auth/address`);
+    useFetch<{ address?: Address }>(`${API_CONFIG.baseURL}/auth/address`);
 
   // --- Automatically load address if user is logged in ---
   useEffect(() => {

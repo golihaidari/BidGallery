@@ -1,0 +1,128 @@
+{
+  "title": "BidGallery - Core Metrics",
+  "tags": ["bidgallery"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "BID",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(checkout_bid_duration_seconds_count)",
+          "legendFormat": "{{value}} total bids",
+          "refId": "A"
+        },
+        {
+          "expr": "100 * (sum(checkout_bid_duration_seconds_count{success=\"true\"}) / sum(checkout_bid_duration_seconds_count))",
+          "legendFormat": "{{value}}% success",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 50},
+              {"color": "green", "value": 90}
+            ]
+          }
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+    },
+    {
+      "id": 2,
+      "title": "ORDERS",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(checkout_order_total)",
+          "legendFormat": "{{value}} total orders",
+          "refId": "A"
+        },
+        {
+          "expr": "100 * (sum(checkout_order_total{success=\"true\"}) / sum(checkout_order_total))",
+          "legendFormat": "{{value}}% success",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 50},
+              {"color": "green", "value": 90}
+            ]
+          }
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+    },
+    {
+      "id": 3,
+      "title": "USERS",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(auth_register_total)",
+          "legendFormat": "{{value}} total registers",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(auth_login_total)",
+          "legendFormat": "{{value}} total logins",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          }
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+    },
+    {
+      "id": 4,
+      "title": "SYSTEM HEALTH",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "process_cpu_usage * 100",
+          "legendFormat": "CPU: {{value}}%",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 70},
+              {"color": "red", "value": 90}
+            ]
+          }
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+    }
+  ],
+  "time": {"from": "now-6h", "to": "now"},
+  "refresh": "30s"
+}

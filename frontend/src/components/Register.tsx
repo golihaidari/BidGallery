@@ -9,10 +9,10 @@ import FormValidator from "@utils/UserFormValidator";
 import type { User } from "@interfaces/User.tsx";
 import type { Artist } from "@interfaces/Artist";
 import type { Address } from "@interfaces/Address.tsx";
-import { API_URL } from "../config.tsx";
+import { API_CONFIG } from "../config.tsx";
 
 const countryList = countries.map((c) => c.name.common).sort();
-const submitUrl = `${API_URL}/api/auth/register`;
+const submitUrl = `${API_CONFIG.baseURL}/auth/register`;
 
 export default function Register() {
   const navigate = useNavigate();

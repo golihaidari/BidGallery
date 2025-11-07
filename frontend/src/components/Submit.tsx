@@ -5,12 +5,12 @@ import { useNavigate } from "react-router-dom";
 import useFetch from "@hook/fetchData";
 import FormTemplate from "@components/common/FormTemplate";
 import InfoCard from "@components/cards/InfoCard";
-import { API_URL } from "../config";
+import { API_CONFIG } from "../config";
 export default function Submit() {
   const { state, dispatch } = useCheckout();
   const navigate = useNavigate();
   const { sendRequest, data, error: apiError, isLoading, status, reset } = useFetch<any>(
-    `${API_URL}/api/checkout/placeorder`
+    `${API_CONFIG.baseURL}/checkout/placeorder`
   );
 
   const [showResultCard, setShowResultCard] = useState(false);

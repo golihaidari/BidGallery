@@ -9,5 +9,9 @@ module.exports = defineConfig({
     experimentalStudio: true,
     viewportWidth: 1280,
     viewportHeight: 720,
+    supportFile: false,
   },
+  env: {
+    apiUrl: 'http://localhost:8080'
+  }
 });

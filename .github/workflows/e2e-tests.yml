@@ -1,0 +1,42 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [staging]
+    paths: ['frontend/**', 'backend/**']
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Login to Docker Hub
+      run: |
+        echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+        
+    - name: Pull latest images
+      run: |
+        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }}
+        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }}
+        
+        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }} bidgallery_frontend-dev
+        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }} bidgallery_backend-dev
+        
+    - name: Start services
+      run: |
+        docker-compose --profile dev up -d
+        sleep 45
+        
+    - name: Run Cypress tests
+      run: |
+        cd e2e
+        npm ci
+        npx cypress run --config baseUrl=http://localhost:5173
+        
+    - name: Cleanup
+      if: always()
+      run: |
+        docker-compose down

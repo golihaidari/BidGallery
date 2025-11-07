@@ -6,9 +6,9 @@ import { useCheckout } from "@context/CheckoutContext";
 import FormTemplate from "@components/common/FormTemplate.tsx";
 import FormValidator from "@utils/UserFormValidator";
 import InfoCard from "@components/cards/InfoCard.tsx"; 
-import { API_URL } from "../config.tsx";
+import { API_CONFIG } from "../config.tsx";
 
-const submitUrl = `${API_URL}/api/checkout/placebid`;
+const submitUrl = `${API_CONFIG.baseURL}/checkout/placebid`;
 
 const Bid: React.FC = () => {
   const location = useLocation();

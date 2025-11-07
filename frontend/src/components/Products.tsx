@@ -7,10 +7,10 @@ import "@components/extraCss/Products.css";
 
 import ProductCard from "@components/cards/ProductCard";
 import Loader from "@components/common/Loader";
-import { API_URL } from "../config";
+import { API_CONFIG } from "../config";
 
 //const dataUrl = "/data/products.json";
-const dataUrl =`${API_URL}/api/products/available`
+const dataUrl =`${API_CONFIG.baseURL}/products/available`
 type OutletContext = { searchTerm: string };
 
 const Products = () => {

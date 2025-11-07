@@ -1,0 +1,20 @@
+name: Backend CD
+
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**']
+
+jobs:
+  backend-cd:
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - name: Deploy to CapRover
+      uses: caprover/deploy-from-github@v1.1.0
+      with:
+        server: '${{ secrets.CAPROVER_SERVER }}'
+        app: 'bidgallery-backend'
+        token: '${{ secrets.CAPROVER_APP_TOKEN }}'
+        image: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }}'
