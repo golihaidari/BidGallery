@@ -26,6 +26,11 @@ jobs:
       run: |
         docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }} -f frontend/Dockerfile ./frontend
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }}
+      env: 
+        VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+        VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+        VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
         
     - name: Build and push Backend Docker image
       run: |
