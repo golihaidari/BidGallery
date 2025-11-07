@@ -35,7 +35,7 @@ jobs:
 
     - name: Start services
       run: |
-        docker-compose --profile dev up -d
+        docker compose --profile dev up -d
         sleep 45
         
     - name: Run Cypress tests
@@ -47,4 +47,4 @@ jobs:
     - name: Cleanup
       if: always()
       run: |
-        docker-compose down
+        docker compose down
