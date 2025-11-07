@@ -1,0 +1,22 @@
+name: Deploy Backend
+
+on:
+  workflow_run:
+    workflows: ["Security Scan"]
+    types: [completed]
+    branches: [main]
+  workflow_call: {}
+
+jobs:
+  deploy-backend:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+    - name: Deploy backend to CapRover
+      uses: caprover/deploy-from-github@v1.1.0
+      with:
+        server: '${{ secrets.CAPROVER_SERVER }}'
+        app: 'bidgallery-backend'
+        token: '${{ secrets.CAPROVER_APP_TOKEN }}'
+        image: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }}'

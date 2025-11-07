@@ -1,0 +1,22 @@
+name: Database Setup
+
+on:
+  workflow_run:
+    workflows: ["Backend CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  database-migrations:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - name: Run database migrations
+      run: |
+        # Use Flyway or Liquibase for database migrations
+        curl -X POST https://api.yourdomain.com/actuator/flyway
+      env:
+        MIGRATION_TOKEN: ${{ secrets.MIGRATION_TOKEN }}

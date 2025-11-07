@@ -1,0 +1,53 @@
+name: E2E Tests
+
+on:
+  workflow_run:
+    workflows: ["Deploy Frontend", "Deploy Backend"]
+    types: [completed]
+    branches: [main, dev]
+
+jobs:
+  e2e-tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Login to Docker Hub
+      run: |
+        echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+        
+    - name: Start full stack with Docker Compose
+      run: |
+        # Use your existing docker-compose with test profile
+        docker-compose --profile dev up -d
+        sleep 45
+        
+    - name: Health check services
+      run: |
+        echo "Checking frontend health..."
+        curl -f http://localhost:5173 || exit 1
+        
+        echo "Checking backend health..."  
+        curl -f http://localhost:8080/actuator/health || exit 1
+        
+        echo "All services healthy!"
+        
+    - name: Run Cypress tests
+      run: |
+        cd e2e
+        npm ci
+        npx cypress run --config baseUrl=http://localhost:5173
+        
+    - name: Cleanup
+      if: always()
+      run: docker-compose down
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: cypress-screenshots
+        path: cypress/screenshots

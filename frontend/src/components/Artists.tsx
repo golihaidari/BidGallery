@@ -5,10 +5,10 @@ import type { Artist } from "@interfaces/Artist";
 import ArtistCard from "@components/cards/ArtistCard";
 import Loader from "@components/common/Loader";
 import "./extraCss/Artists.css";
-import { API_URL } from "../config";
+import { API_CONFIG } from "../config";
 
 //const dataUrl = "/data/artists.json";
-const dataUrl =`${API_URL}/api/artists`
+const dataUrl =`${API_CONFIG.baseURL}/artists`
 
 const ArtistsPage = () => {
   const { sendRequest, data, isLoading, error } = useFetch<Artist[]>(dataUrl);

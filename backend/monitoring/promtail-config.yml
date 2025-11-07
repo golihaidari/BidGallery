@@ -17,4 +17,5 @@ scrape_configs:
       job: bidgallery-logs
       app: bidgallery-backend
       environment: development
-      __path__: /var/log/bidgallery/*.log  # Points to the bidgallery.log file
+      __path__: /var/lib/docker/containers/*/*.log  # ← CHANGED: Monitor all container logs
+      #__path__: /var/log/bidgallery/*.log  # Points to the bidgallery.log file
