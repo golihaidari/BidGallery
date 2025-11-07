@@ -1,12 +1,14 @@
 name: E2E Tests
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Frontend CI", "Backend CI"]
+    types: [completed]
     branches: [staging]
-    paths: ['frontend/**', 'backend/**']
 
 jobs:
   e2e-tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     
     steps:
