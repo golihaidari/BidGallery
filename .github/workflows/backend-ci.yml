@@ -1,11 +1,8 @@
 name: Backend CI
 
 on:
-  pull_request:
-    branches: [staging]
-    paths: ['backend/**']
   push:
-    branches: [dev, staging]  
+    branches: [dev]  
     paths: ['backend/**']
 
 jobs:
@@ -45,6 +42,7 @@ jobs:
         mvn clean package -DskipTests
         
     - name: Build and push Docker image
+      if: github.event_name == 'push'  # ← ONLY push on direct push, not PR
       run: |
         docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }} -f backend/Dockerfile ./backend
         echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
