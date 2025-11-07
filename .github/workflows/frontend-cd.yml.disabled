@@ -8,7 +8,7 @@ on:
 jobs:
   frontend-cd:
     runs-on: ubuntu-latest
-    environment: production
+    #environment: production
     
     steps:
     - name: Deploy to CapRover
