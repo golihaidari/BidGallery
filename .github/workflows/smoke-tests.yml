@@ -2,7 +2,7 @@ name: Smoke Tests
 
 on:
   workflow_run:
-    workflows: ["Deploy Frontend", "Deploy Backend"]
+    workflows: ["Frontend CD", "Backend CD"]
     types: [completed]
 
 jobs:
@@ -11,15 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Test frontend
-      run: curl -f https://frontend.yourdomain.com/ || exit 1
+      run: curl -f https://frontend.realdomain.com/ || exit 1
       
     - name: Test backend API
-      run: curl -f https://api.yourdomain.com/actuator/health || exit 1
+      run: curl -f https://api.realdomain.com/actuator/health || exit 1
       
     - name: Test database connection
       run: |
-        response=$(curl -s https://api.yourdomain.com/actuator/health)
+        response=$(curl -s https://api.realomain.com/actuator/health)
         echo $response | grep '"status":"UP"' || exit 1
         
     - name: Deployment success
-      run: echo "🎉 All services deployed and healthy!"
+      run: echo All services deployed and healthy!"

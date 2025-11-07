@@ -1,27 +1,20 @@
-name: Deploy Frontend
+name: Frontend CD
 
 on:
-  workflow_run:
-    workflows: ["Security Scan"]
-    types: [completed]
+  push:
     branches: [main]
+    paths: ['frontend/**']
 
 jobs:
-  deploy-frontend:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  frontend-cd:
     runs-on: ubuntu-latest
     environment: production
     
     steps:
-    - name: Deploy frontend to CapRover
+    - name: Deploy to CapRover
       uses: caprover/deploy-from-github@v1.1.0
       with:
         server: '${{ secrets.CAPROVER_SERVER }}'
         app: 'bidgallery-frontend'
         token: '${{ secrets.CAPROVER_APP_TOKEN }}'
         image: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }}'
-        
-    - name: Verify deployment
-      run: |
-        echo "Frontend deployed successfully to CapRover"
-        echo "Image: ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }}"

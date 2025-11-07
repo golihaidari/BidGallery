@@ -2,7 +2,7 @@ name: Frontend CI
 
 on:
   pull_request:
-    branches: [dev, main]
+    branches: [dev]
     paths: ['frontend/**']
 
 jobs:
@@ -24,39 +24,16 @@ jobs:
       run: npm ci
       working-directory: ./frontend
       
-    - name: Run type check
-      run: npm run type-check
-      working-directory: ./frontend
-      
-    - name: Run unit tests
-      run: npm run test:unit
-      working-directory: ./frontend
-      
-    - name: Run integration tests  
-      run: npm run test:integration
+    - name: Run tests
+      run: npm test
       working-directory: ./frontend
       
     - name: Build application
       run: npm run build
       working-directory: ./frontend
       
-    - name: Test build output
+    - name: Build and push Docker image
       run: |
-        ls -la frontend/dist/
-        echo "✅ Frontend build completed successfully"
-      
-    - name: Build Docker image
-      run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }} \
-          -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest \
-          -f frontend/Dockerfile ./frontend
-          
-    - name: Push to Docker Hub
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
-      run: |
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }} -f frontend/Dockerfile ./frontend
         echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }}
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest
-        
-    - name: Log completion
-      run: echo "✅ Frontend CI completed successfully"

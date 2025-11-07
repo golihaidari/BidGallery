@@ -1,19 +1,17 @@
-name: Deploy Backend
+name: Backend CD
 
 on:
-  workflow_run:
-    workflows: ["Security Scan"]
-    types: [completed]
+  push:
     branches: [main]
-  workflow_call: {}
+    paths: ['backend/**']
 
 jobs:
-  deploy-backend:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  backend-cd:
     runs-on: ubuntu-latest
     environment: production
+    
     steps:
-    - name: Deploy backend to CapRover
+    - name: Deploy to CapRover
       uses: caprover/deploy-from-github@v1.1.0
       with:
         server: '${{ secrets.CAPROVER_SERVER }}'

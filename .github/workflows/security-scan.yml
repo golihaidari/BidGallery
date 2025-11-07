@@ -4,24 +4,40 @@ on:
   workflow_run:
     workflows: ["E2E Tests"]
     types: [completed]
-    branches: [main]
+    #branches: [main] so now triggering on eachE2E test
 
 jobs:
   security-scan:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    #environment: production
+    
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Login to Docker Hub
+      run: |
+        echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+        
+    - name: Pull images for scanning
+      run: |
+        # Pull the images that passed E2E tests
+        SHA="${{ github.event.workflow_run.head_sha }}"
+        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:$SHA
+        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:$SHA
+        
     - name: Scan backend image
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }}'
+        image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.event.workflow_run.head_sha }}'
         format: 'sarif'
         output: 'trivy-backend-results.sarif'
         
     - name: Scan frontend image
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }}'
+        image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.event.workflow_run.head_sha }}'
         format: 'sarif'
         output: 'trivy-frontend-results.sarif'
         
