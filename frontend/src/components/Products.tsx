@@ -9,7 +9,7 @@ import ProductCard from "@components/cards/ProductCard";
 import Loader from "@components/common/Loader";
 import { API_CONFIG } from "../config";
 
-//const dataUrl = "/data/products.json"; ..
+//const dataUrl = "/data/products.json"; 
 const dataUrl =`${API_CONFIG.baseURL}/products/available`
 type OutletContext = { searchTerm: string };
 

@@ -37,7 +37,22 @@ jobs:
       run: |
         docker compose --profile dev up -d
         sleep 45
+
+        # Check container status and logs
+        echo "=== Container Status ==="
+        docker compose ps
         
+        echo "=== Backend Logs ==="
+        docker compose logs backend-dev || echo "Could not get backend logs"
+        
+        echo "=== Database Logs ==="
+        docker compose logs database || echo "Could not get database logs"
+        
+        # Wait longer and check again
+        sleep 30
+        echo "=== Final Container Status ==="
+        docker compose ps
+
     - name: Run Cypress tests
       run: |
         cd e2e
