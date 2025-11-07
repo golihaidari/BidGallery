@@ -19,13 +19,12 @@ jobs:
     
     - name: Pull latest images
       run: |
-        # Use 'latest' tag instead of specific SHA
-        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest
-        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest
+        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }}
+        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }}
         
-        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest bidgallery_frontend-dev
-        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest bidgallery_backend-dev
-  
+        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }} bidgallery_frontend-dev
+        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }} bidgallery_backend-dev
+        
     - name: Start services
       run: |
         docker-compose --profile dev up -d
