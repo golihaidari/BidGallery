@@ -4,6 +4,9 @@ on:
   push:
     branches: [dev]  
     paths: ['backend/**']
+  pull_request:
+    branches: [dev, staging, main]
+    paths: ['backend/**']
 
 jobs:
   backend-ci:
@@ -13,6 +16,25 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
+    - name: Create backend environment file from secrets
+      run: |
+        # Create the .env.development file that docker-compose expects
+        cat > backend/.env.development << EOF
+        SPRING_PROFILES_ACTIVE=development
+        SPRING_DATASOURCE_URL=jdbc:mariadb://database:3306/bidgallery
+        SPRING_DATASOURCE_USERNAME=admin
+        SPRING_DATASOURCE_PASSWORD=password
+        SPRING_JPA_HIBERNATE_DDL_AUTO=update
+        FIREBASE_SERVICE_ACCOUNT_FILE=/app/firebase-service.json
+        EOF
+        
+        # Create firebase-service.json
+        mkdir -p backend/src/main/resources
+        echo "${{ secrets.FIREBASE_SERVICE_JSON_B64 }}" | base64 --decode > backend/src/main/resources/firebase-service.json
+        
+        echo "=== Backend environment file created ==="
+        cat backend/.env.development
+
     - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
@@ -20,16 +42,6 @@ jobs:
         distribution: 'temurin'
         cache: maven
         cache-dependency-path: backend/pom.xml
-    
-    - name: Create firebase-service.json from secret
-      run: |
-        echo "${{ secrets.FIREBASE_SERVICE_JSON_B64 }}" | base64 -d > backend/src/main/resources/firebase-service.json
-        echo "Firebase service account created"
-        
-    - name: Verify firebase file was created
-      run: |
-        ls -la backend/src/main/resources/firebase-service.json
-        echo "Firebase file verified"
         
     - name: Run tests
       run: |
@@ -41,8 +53,14 @@ jobs:
         cd backend
         mvn clean package -DskipTests
         
-    - name: Build and push Docker image
+    - name: Build Docker image using docker-compose
       run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }} -f backend/Dockerfile ./backend
+        # Now docker-compose has the .env.development file it needs
+        docker compose build backend-dev
+        
+    - name: Tag and push to Docker Hub (on dev branch)
+      if: github.ref == 'refs/heads/dev'
+      run: |
+        docker tag bidgallery-backend-dev ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:dev-${{ github.sha }}
         echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }}
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:dev-${{ github.sha }}

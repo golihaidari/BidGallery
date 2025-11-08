@@ -334,7 +334,7 @@ public class AuthController {
     }
 
     // -----------------------------LOGOUT-----------------------------
-    @PostMapping("/logout")
+    @GetMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest httpRequest) {
         String correlationId = (String) httpRequest.getAttribute("correlationId"); // For business
 

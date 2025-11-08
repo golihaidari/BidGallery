@@ -33,3 +33,5 @@ build/
 .vscode/
 
 /resources/
+
+firebase-service.json

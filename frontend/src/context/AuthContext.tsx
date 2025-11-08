@@ -13,10 +13,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserEmail(email);
   };
 
-  const { sendRequest, error } = useFetch<{ success: boolean }>(`${API_CONFIG}/auth/logout`);
+  const { sendRequest, error } = useFetch<{ success: boolean }>(`${API_CONFIG.baseURL}/auth/logout`);
   const logout = async () => {
     await sendRequest(
-      { method: "POST", credentials: "include" },
+      { method: "GET", credentials: "include" },
       "Logout failed"
     );
 

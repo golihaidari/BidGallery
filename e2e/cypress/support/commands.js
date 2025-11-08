@@ -1,5 +1,19 @@
 //------------------ API COMMANDS (REAL CALLS) ---------------
 Cypress.Commands.add('setupBackend', () => {
+  cy.log('Waiting for backend to be ready...');
+  
+  cy.request({
+    method: 'GET',
+    url: 'http://localhost:8080/actuator/health',
+    timeout: 30000,
+    retryOnStatusCodeFailure: true,
+    retryOnNetworkFailure: true
+  }).then((response) => {
+    expect(response.status).to.eq(200);
+    expect(response.body.status).to.eq('UP');
+    cy.log('Backend is healthy');
+  });
+
   cy.intercept('POST', 'https://eobr8yycab7ojzy.m.pipedream.net', {
     statusCode: 200, body: 'Payment processed'
   }).as('externalPayment');
@@ -11,8 +25,31 @@ Cypress.Commands.add('setupBackend', () => {
   cy.intercept('POST', '**/api/checkout/placeorder').as('api_PlaceOrder');
   cy.intercept('POST', '**/api/auth/register').as('api_RegisterUser');
   cy.intercept('POST', '**/api/auth/login').as('api_LoginUser');
-  cy.intercept('POST', '**/api/auth/logout').as('api_LogoutUser'); 
+  cy.intercept('GET', '**/api/auth/logout').as('api_LogoutUser'); 
   cy.intercept('GET', '**/api/artists').as('api_GetArtists'); 
+
+  // FAILURE intercept (different alias)
+  cy.intercept('POST', '**/api/checkout/placeorder', {
+     statusCode: 400,
+     body: { success: false, error: 'Payment validation failed' }
+  }).as('api_PlaceOrderFail');
+});
+
+//------------------ WAIT COMMANDS -----------------
+Cypress.Commands.add('waitForBackend', () => {
+  cy.log('Waiting for backend to be ready...');
+  
+  cy.request({
+    method: 'GET',
+    url: 'http://localhost:8080/actuator/health',
+    timeout: 30000,
+    retryOnStatusCodeFailure: true,
+    retryOnNetworkFailure: true
+  }).then((response) => {
+    expect(response.status).to.eq(200);
+    expect(response.body.status).to.eq('UP');
+    cy.log('Backend is healthy');
+  });
 });
 
 //------------------ AUTH COMMANDS -----------------
