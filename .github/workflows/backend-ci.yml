@@ -23,13 +23,15 @@ jobs:
     
     - name: Create firebase-service.json from secret
       run: |
-        echo "${{ secrets.FIREBASE_SERVICE_JSON_B64 }}" | base64 -d > backend/src/main/resources/firebase-service.json
+        mkdir -p backend/src/main/resources
+        echo "${{ secrets.FIREBASE_SERVICE_JSON_B64 }}" | base64 --decode > backend/src/main/resources/firebase-service.json
         echo "Firebase service account created"
         
     - name: Verify firebase file was created
       run: |
         ls -la backend/src/main/resources/firebase-service.json
-        echo "Firebase file verified"
+        echo "File content preview (first 200 chars):"
+        head -c 200 backend/src/main/resources/firebase-service.json
         
     - name: Run tests
       run: |
@@ -41,4 +43,7 @@ jobs:
         cd backend
         mvn clean package -DskipTests
         
-    
+    - name: Build Docker image
+      run: |
+        cd backend
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:ci-${{ github.sha }} .

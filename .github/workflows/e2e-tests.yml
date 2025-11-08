@@ -3,7 +3,7 @@ name: E2E Tests
 on:
   pull_request:
     branches: [staging] 
-    paths: ['frontend/**' , 'backend/**']
+    paths: ['frontend/**', 'backend/**']
 
 jobs:
   e2e-tests:
@@ -13,55 +13,63 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Login to Docker Hub
+    - name: Create environment files from secrets
       run: |
-        echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-    
-    - name: Create Firebase config for frontend
-      run: |
-        echo "${{ secrets.FIREBASE_CONFIG_B64 }}" | base64 -d > frontend/src/firebase-config.json
-        echo "Firebase config created for frontend"
-
-    - name: Build and push Frontend Docker image      
-      run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }} -f frontend/Dockerfile ./frontend
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }}
-      env: 
-        VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-        VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-        VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-        VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+        # Create backend .env.development file 
+        cat > backend/.env.development << EOF
+        SPRING_PROFILES_ACTIVE=test
+        SPRING_DATASOURCE_URL=jdbc:mariadb://database:3306/bidgallery
+        SPRING_DATASOURCE_USERNAME=admin
+        SPRING_DATASOURCE_PASSWORD=password
+        SPRING_JPA_HIBERNATE_DDL_AUTO=update
+        FIREBASE_SERVICE_ACCOUNT_JSON=${{ secrets.FIREBASE_SERVICE_JSON_B64 }}
+        EOF
         
-    - name: Build and push Backend Docker image
-      run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }} -f backend/Dockerfile ./backend
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }}
+        # Create frontend .env.development file 
+        cat > frontend/.env.development << EOF
+        VITE_API_BASE_URL=http://localhost:8080/api
+        VITE_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
+        VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
+        VITE_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+        VITE_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
+        EOF
+        
+        # Create backend Firebase service account file
+        mkdir -p backend/src/main/resources
+        echo "${{ secrets.FIREBASE_SERVICE_JSON_B64 }}" | base64 --decode > backend/src/main/resources/firebase-service.json
+        
+        echo "=== Created environment files ==="
+        echo "Backend .env.development:"
+        cat backend/.env.development
+        echo "Frontend .env.development:"
+        cat frontend/.env.development
 
-    - name: Tag images for docker-compose
+    - name: Build Docker images
       run: |
-        # Tag the locally built images instead of pulling
-        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }} bidgallery_frontend-dev
-        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.sha }} bidgallery_backend-dev
+        # Build images using your existing Dockerfiles
+        docker build -t bidgallery-frontend-dev -f frontend/Dockerfile ./frontend
+        docker build -t bidgallery-backend-dev -f backend/Dockerfile ./backend
 
-    - name: Start services
+    - name: Start services using dev profile
       run: |
+        # Use your existing frontend-dev and backend-dev services
         docker compose --profile dev up -d
-        sleep 45
+        sleep 30
 
-        # Check container status and logs
+    - name: Check service status
+      run: |
         echo "=== Container Status ==="
         docker compose ps
         
         echo "=== Backend Logs ==="
-        docker compose logs backend-dev || echo "Could not get backend logs"
+        docker compose logs backend-dev
         
-        echo "=== Database Logs ==="
-        docker compose logs database || echo "Could not get database logs"
+        echo "=== Database Logs ==="  
+        docker compose logs database
         
-        # Wait longer and check again
-        sleep 30
-        echo "=== Final Container Status ==="
-        docker compose ps
+        # Wait for backend health
+        echo "=== Waiting for backend to be healthy ==="
+        timeout 120s bash -c 'until curl -f http://localhost:8080/actuator/health; do sleep 10; done'
 
     - name: Run Cypress tests
       run: |
@@ -72,4 +80,4 @@ jobs:
     - name: Cleanup
       if: always()
       run: |
-        docker compose down
+        docker compose down -v

@@ -9,29 +9,11 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-/*
+
 // Initialize Firebase only if it hasn’t been initialized already
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Export Auth instance
 const auth = getAuth(app);
-
-export { app, auth };*/
-
-
-let app: any = undefined;
-let auth: any = undefined;
-
-try {
-  if (firebaseConfig.apiKey && firebaseConfig.projectId) {
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
-    console.log("Firebase initialized successfully");
-  } else {
-    console.warn("Firebase config missing - running in limited mode");
-  }
-} catch (error) {
-  console.warn("Firebase initialization failed:", error);
-}
 
 export { app, auth };
