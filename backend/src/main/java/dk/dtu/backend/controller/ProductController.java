@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import dk.dtu.backend.dto.responses.ProductDTO;
 import dk.dtu.backend.persistence.entity.Product;
-import dk.dtu.backend.service.AuthService;
 import dk.dtu.backend.service.MetricService;
 import dk.dtu.backend.service.ProductService;
 import dk.dtu.backend.utils.DtoMapper;
@@ -29,9 +28,6 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
-
-    @Autowired 
-    private AuthService authService;
 
     @Autowired
     private MetricService metricService;

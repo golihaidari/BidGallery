@@ -1,28 +1,31 @@
 package dk.dtu.backend.integration;
 
-import dk.dtu.backend.TestApplication;
-import dk.dtu.backend.TestDataFactory;
-import dk.dtu.backend.TestSecurityConfig;
-import dk.dtu.backend.persistence.entity.*;
-import dk.dtu.backend.persistence.repository.UserRepository;
-import dk.dtu.backend.utils.JwtUtil;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import dk.dtu.backend.TestApplication;
+import dk.dtu.backend.TestDataFactory;
+import dk.dtu.backend.TestSecurityConfig;
+import dk.dtu.backend.persistence.entity.User;
+import dk.dtu.backend.persistence.repository.UserRepository;
+import dk.dtu.backend.utils.JwtUtil;
 
 
 @SpringBootTest(
