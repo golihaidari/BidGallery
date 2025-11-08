@@ -103,11 +103,7 @@ describe('Complete Checkout Flow', () => {
     cy.screenshot('checkout/payment-before-order'); 
 
     // First attempt: fail
-    cy.contains('Confirm Order').click();
-    cy.intercept('POST', '**/api/checkout/placeorder', {
-      statusCode: 400,
-      body: { success: false, error: 'Payment validation failed' }
-    }).as('api_PlaceOrderFail');
+    cy.contains('Confirm Order').click();    
     cy.wait('@api_PlaceOrderFail', {timeout: 5000}).its('response.statusCode').should('eq', 400);
     cy.screenshot('checkout/order-failure'); // screenshot of failure
 

@@ -43,10 +43,16 @@ describe('Authentication Flows - E2E', () => {
   });
 
   it('should logout successfully', () => {
-    cy.loginUser(userData.email, userData.password);
-    cy.wait('@api_LoginUser');
-    cy.logoutUser();
-    cy.wait('@api_LogoutUser');
-    cy.screenshot('auth/logout-success');
-  });
+  cy.loginUser(userData.email, userData.password);
+  cy.wait('@api_LoginUser');
+  cy.contains('button', 'Logout', { timeout: 10000 }).should('be.visible');
+  
+  // The logoutUser command clicks the button AND triggers the API call
+  cy.logoutUser();
+  
+  // Wait for the API call that was triggered by the click
+  cy.wait('@api_LogoutUser', {timeout: 5000}).its('response.statusCode').should('eq', 200);
+  
+  cy.url().should('include', '/');
+});
 });
