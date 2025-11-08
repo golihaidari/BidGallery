@@ -102,7 +102,7 @@ export default function Login() {
 
     if (successfulLogin) {
       const userEmail = loginData?.email || googleData?.email!;
-      console.log("Logged in user email:", userEmail);
+      //console.log("Logged in user email:", userEmail);
       login(userEmail); // save in context
       navigate("/"); // redirect after login
     }

@@ -4,9 +4,6 @@ on:
   push:
     branches: [dev] 
     paths: ['frontend/**']
-  pull_request:
-    branches: [dev, staging]
-    paths: ['frontend/**']
 
 jobs:
   frontend-ci:

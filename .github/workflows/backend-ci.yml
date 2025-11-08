@@ -4,9 +4,6 @@ on:
   push:
     branches: [dev]  
     paths: ['backend/**']
-  pull_request:
-    branches: [dev, staging]
-    paths: ['backend/**']
 
 jobs:
   backend-ci:
