@@ -10,35 +10,48 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code (minimal - only for docker-compose and Cypress)
+    - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Login to Docker Hub
+    - name: Create ALL environment files for docker-compose
       run: |
-        echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-    - name: Pull pre-built Docker images
-      run: |
-        # Pull the exact images that passed CI
-        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:dev-${{ github.sha }}
-        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:dev-${{ github.sha }}
+        # Backend .env.development
+        cat > backend/.env.development << EOF
+        SPRING_PROFILES_ACTIVE=development
+        SPRING_DATASOURCE_URL=jdbc:mariadb://database:3306/bidgallery
+        SPRING_DATASOURCE_USERNAME=admin
+        SPRING_DATASOURCE_PASSWORD=password
+        SPRING_JPA_HIBERNATE_DDL_AUTO=update
+        FIREBASE_SERVICE_ACCOUNT_FILE=/app/firebase-service.json
+        EOF
         
-        # Tag for docker-compose
-        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:dev-${{ github.sha }} bidgallery-frontend-dev
-        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:dev-${{ github.sha }} bidgallery-backend-dev
+        # Frontend .env.development
+        cat > frontend/.env.development << EOF
+        VITE_API_BASE_URL=http://localhost:8080/api
+        VITE_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
+        VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
+        VITE_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+        VITE_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
+        EOF
+        
+        # Firebase service account
+        mkdir -p backend/src/main/resources
+        echo "${{ secrets.FIREBASE_SERVICE_JSON_B64 }}" | base64 --decode > backend/src/main/resources/firebase-service.json
+        
+        echo "=== All environment files created for docker-compose ==="
 
-    - name: Start services with pre-built images
+    - name: Build and start services using docker-compose
       run: |
-        # No environment files needed - they're baked into the images
-        docker compose --profile dev up -d --no-build
+        # Now docker-compose has ALL the env files it needs
+        docker compose --profile dev up -d --build
         sleep 30
 
-    - name: Verify services are healthy
+    - name: Check service status
       run: |
         echo "=== Container Status ==="
         docker compose ps
         
-        # Wait for backend
+        # Wait for backend health
         timeout 180s bash -c 'until curl -f http://localhost:8080/actuator/health; do echo "Waiting for backend..."; sleep 10; done'
 
     - name: Run Cypress tests
