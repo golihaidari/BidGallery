@@ -4,6 +4,9 @@ on:
   push:
     branches: [dev]  
     paths: ['backend/**']
+  pull_request:
+    branches: [staging, main]
+    paths: ['backend/**']
 
 jobs:
   backend-ci:
@@ -21,22 +24,36 @@ jobs:
         cache: maven
         cache-dependency-path: backend/pom.xml
     
-    - name: Create firebase-service.json from secret
+    - name: Create environment file for testing
       run: |
+        # Create a .env.test file for CI database connection
+        cat > backend/.env.test << EOF
+        SPRING_PROFILES_ACTIVE=test
+        SPRING_DATASOURCE_URL=jdbc:h2:mem:testdb
+        SPRING_DATASOURCE_USERNAME=sa
+        SPRING_DATASOURCE_PASSWORD=password
+        SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
+        SPRING_H2_CONSOLE_ENABLED=true
+        FIREBASE_SERVICE_ACCOUNT_FILE=src/main/resources/firebase-service.json
+        EOF
+        
+        # Create firebase-service.json from secret
         mkdir -p backend/src/main/resources
         echo "${{ secrets.FIREBASE_SERVICE_JSON_B64 }}" | base64 --decode > backend/src/main/resources/firebase-service.json
-        echo "Firebase service account created"
+        echo "Environment files created for CI testing"
         
-    - name: Verify firebase file was created
+    - name: Verify files were created
       run: |
+        echo "=== Backend environment files ==="
+        ls -la backend/.env.test
         ls -la backend/src/main/resources/firebase-service.json
-        echo "File content preview (first 200 chars):"
-        head -c 200 backend/src/main/resources/firebase-service.json
+        echo "=== .env.test content ==="
+        cat backend/.env.test
         
-    - name: Run tests
+    - name: Run tests with test profile
       run: |
         cd backend
-        mvn clean test
+        mvn clean test -Dspring.profiles.active=test
         
     - name: Build application
       run: |
@@ -45,5 +62,11 @@ jobs:
         
     - name: Build Docker image
       run: |
-        cd backend
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:ci-${{ github.sha }} .
+        # Build using your existing Dockerfile (which uses .env.development)
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:dev-${{ github.sha }} -f backend/Dockerfile ./backend
+        
+    - name: Push to Docker Hub (on dev branch)
+      if: github.ref == 'refs/heads/dev'
+      run: |
+        echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:dev-${{ github.sha }}

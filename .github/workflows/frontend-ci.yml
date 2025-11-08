@@ -4,6 +4,9 @@ on:
   push:
     branches: [dev] 
     paths: ['frontend/**']
+  pull_request:
+    branches: [staging, main]
+    paths: ['frontend/**']
 
 jobs:
   frontend-ci:
@@ -27,9 +30,26 @@ jobs:
     - name: Run tests
       run: npm test
       working-directory: ./frontend
-      
+      env:
+        CI: true
+        
     - name: Build application
       run: npm run build
       working-directory: ./frontend
-      
-    
+      env:
+        # Use your existing .env.development values or override with secrets
+        VITE_API_BASE_URL: http://localhost:8080/api
+        VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+        VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+        VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+        
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:dev-${{ github.sha }} -f frontend/Dockerfile ./frontend
+        
+    - name: Push to Docker Hub (on dev branch)
+      if: github.ref == 'refs/heads/dev'
+      run: |
+        echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:dev-${{ github.sha }}
