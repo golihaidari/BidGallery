@@ -5,7 +5,7 @@ on:
     branches: [dev] 
     paths: ['frontend/**']
   pull_request:
-    branches: [staging, main]
+    branches: [dev, staging, main]
     paths: ['frontend/**']
 
 jobs:
@@ -15,6 +15,20 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      
+    - name: Create frontend environment file from secrets
+      run: |
+        # Create the .env.development file that docker-compose expects
+        cat > frontend/.env.development << EOF
+        VITE_API_BASE_URL=http://localhost:8080/api
+        VITE_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
+        VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
+        VITE_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+        VITE_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
+        EOF
+        
+        echo "=== Frontend environment file created ==="
+        cat frontend/.env.development
       
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -36,20 +50,15 @@ jobs:
     - name: Build application
       run: npm run build
       working-directory: ./frontend
-      env:
-        # Use your existing .env.development values or override with secrets
-        VITE_API_BASE_URL: http://localhost:8080/api
-        VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-        VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-        VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-        VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
         
-    - name: Build Docker image
+    - name: Build Docker image using docker-compose
       run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:dev-${{ github.sha }} -f frontend/Dockerfile ./frontend
+        # Now docker-compose has the .env.development file it needs
+        docker compose build frontend-dev
         
-    - name: Push to Docker Hub (on dev branch)
+    - name: Tag and push to Docker Hub (on dev branch)
       if: github.ref == 'refs/heads/dev'
       run: |
+        docker tag bidgallery-frontend-dev ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:dev-${{ github.sha }}
         echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:dev-${{ github.sha }}

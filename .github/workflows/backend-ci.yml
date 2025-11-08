@@ -5,7 +5,7 @@ on:
     branches: [dev]  
     paths: ['backend/**']
   pull_request:
-    branches: [staging, main]
+    branches: [dev, staging, main]
     paths: ['backend/**']
 
 jobs:
@@ -16,6 +16,25 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
+    - name: Create backend environment file from secrets
+      run: |
+        # Create the .env.development file that docker-compose expects
+        cat > backend/.env.development << EOF
+        SPRING_PROFILES_ACTIVE=development
+        SPRING_DATASOURCE_URL=jdbc:mariadb://database:3306/bidgallery
+        SPRING_DATASOURCE_USERNAME=admin
+        SPRING_DATASOURCE_PASSWORD=password
+        SPRING_JPA_HIBERNATE_DDL_AUTO=update
+        FIREBASE_SERVICE_ACCOUNT_FILE=/app/firebase-service.json
+        EOF
+        
+        # Create firebase-service.json
+        mkdir -p backend/src/main/resources
+        echo "${{ secrets.FIREBASE_SERVICE_JSON_B64 }}" | base64 --decode > backend/src/main/resources/firebase-service.json
+        
+        echo "=== Backend environment file created ==="
+        cat backend/.env.development
+
     - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
@@ -23,50 +42,25 @@ jobs:
         distribution: 'temurin'
         cache: maven
         cache-dependency-path: backend/pom.xml
-    
-    - name: Create environment file for testing
-      run: |
-        # Create a .env.test file for CI database connection
-        cat > backend/.env.test << EOF
-        SPRING_PROFILES_ACTIVE=test
-        SPRING_DATASOURCE_URL=jdbc:h2:mem:testdb
-        SPRING_DATASOURCE_USERNAME=sa
-        SPRING_DATASOURCE_PASSWORD=password
-        SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
-        SPRING_H2_CONSOLE_ENABLED=true
-        FIREBASE_SERVICE_ACCOUNT_FILE=src/main/resources/firebase-service.json
-        EOF
         
-        # Create firebase-service.json from secret
-        mkdir -p backend/src/main/resources
-        echo "${{ secrets.FIREBASE_SERVICE_JSON_B64 }}" | base64 --decode > backend/src/main/resources/firebase-service.json
-        echo "Environment files created for CI testing"
-        
-    - name: Verify files were created
-      run: |
-        echo "=== Backend environment files ==="
-        ls -la backend/.env.test
-        ls -la backend/src/main/resources/firebase-service.json
-        echo "=== .env.test content ==="
-        cat backend/.env.test
-        
-    - name: Run tests with test profile
+    - name: Run tests
       run: |
         cd backend
-        mvn clean test -Dspring.profiles.active=test
+        mvn clean test
         
     - name: Build application
       run: |
         cd backend
         mvn clean package -DskipTests
         
-    - name: Build Docker image
+    - name: Build Docker image using docker-compose
       run: |
-        # Build using your existing Dockerfile (which uses .env.development)
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:dev-${{ github.sha }} -f backend/Dockerfile ./backend
+        # Now docker-compose has the .env.development file it needs
+        docker compose build backend-dev
         
-    - name: Push to Docker Hub (on dev branch)
+    - name: Tag and push to Docker Hub (on dev branch)
       if: github.ref == 'refs/heads/dev'
       run: |
+        docker tag bidgallery-backend-dev ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:dev-${{ github.sha }}
         echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:dev-${{ github.sha }}

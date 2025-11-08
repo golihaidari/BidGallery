@@ -13,19 +13,19 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Create environment files from secrets
+    - name: Create ALL environment files for docker-compose
       run: |
-        # Create backend .env.development file 
+        # Backend .env.development
         cat > backend/.env.development << EOF
-        SPRING_PROFILES_ACTIVE=test
+        SPRING_PROFILES_ACTIVE=development
         SPRING_DATASOURCE_URL=jdbc:mariadb://database:3306/bidgallery
         SPRING_DATASOURCE_USERNAME=admin
         SPRING_DATASOURCE_PASSWORD=password
         SPRING_JPA_HIBERNATE_DDL_AUTO=update
-        FIREBASE_SERVICE_ACCOUNT_JSON=${{ secrets.FIREBASE_SERVICE_JSON_B64 }}
+        FIREBASE_SERVICE_ACCOUNT_FILE=/app/firebase-service.json
         EOF
         
-        # Create frontend .env.development file 
+        # Frontend .env.development
         cat > frontend/.env.development << EOF
         VITE_API_BASE_URL=http://localhost:8080/api
         VITE_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
@@ -34,26 +34,16 @@ jobs:
         VITE_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
         EOF
         
-        # Create backend Firebase service account file
+        # Firebase service account
         mkdir -p backend/src/main/resources
         echo "${{ secrets.FIREBASE_SERVICE_JSON_B64 }}" | base64 --decode > backend/src/main/resources/firebase-service.json
         
-        echo "=== Created environment files ==="
-        echo "Backend .env.development:"
-        cat backend/.env.development
-        echo "Frontend .env.development:"
-        cat frontend/.env.development
+        echo "=== All environment files created for docker-compose ==="
 
-    - name: Build Docker images
+    - name: Build and start services using docker-compose
       run: |
-        # Build images using your existing Dockerfiles
-        docker build -t bidgallery-frontend-dev -f frontend/Dockerfile ./frontend
-        docker build -t bidgallery-backend-dev -f backend/Dockerfile ./backend
-
-    - name: Start services using dev profile
-      run: |
-        # Use your existing frontend-dev and backend-dev services
-        docker compose --profile dev up -d
+        # Now docker-compose has ALL the env files it needs
+        docker compose --profile dev up -d --build
         sleep 30
 
     - name: Check service status
@@ -61,15 +51,8 @@ jobs:
         echo "=== Container Status ==="
         docker compose ps
         
-        echo "=== Backend Logs ==="
-        docker compose logs backend-dev
-        
-        echo "=== Database Logs ==="  
-        docker compose logs database
-        
         # Wait for backend health
-        echo "=== Waiting for backend to be healthy ==="
-        timeout 120s bash -c 'until curl -f http://localhost:8080/actuator/health; do sleep 10; done'
+        timeout 180s bash -c 'until curl -f http://localhost:8080/actuator/health; do echo "Waiting for backend..."; sleep 10; done'
 
     - name: Run Cypress tests
       run: |
