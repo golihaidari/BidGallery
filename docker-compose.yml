@@ -1,6 +1,6 @@
 services:
   # BidGallery Application Stack
-
+  
   # Database first - everything depends on this
   database:
     image: mariadb:10.6
@@ -70,7 +70,7 @@ services:
 
   grafana:
     image: grafana/grafana:10.0.0
-    ports: ["3000:3000"]
+    ports: ["3001:3000"]
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -154,7 +154,7 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./frontend/.env.production
-    ports: ["80:80"]
+    ports: ["3000:80"]
     networks: [app-network]
     depends_on:
       backend-prod:  # <- Point to backend-prod
@@ -166,6 +166,7 @@ volumes:
   loki_data:
   prometheus_data:
   grafana_data:
+  caprover-data:
 
 networks:
   app-network:

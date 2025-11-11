@@ -1,20 +1,21 @@
 name: Frontend CD
 
 on:
-  push:
+  pull_request:
     branches: [main]
+    types: [closed]           # Only when PR is merged
     paths: ['frontend/**']
 
 jobs:
   frontend-cd:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    #environment: production
     
     steps:
     - name: Deploy to CapRover
       uses: caprover/deploy-from-github@v1.1.0
       with:
-        server: '${{ secrets.CAPROVER_SERVER }}'
-        app: 'bidgallery-frontend'
-        token: '${{ secrets.CAPROVER_APP_TOKEN }}'
+        server: '${{ secrets.CAPROVER_URL}}'
+        app: 'frontend'
+        token: '${{ secrets.CAPROVER_APP_TOKEN_FRONTEND}}'
         image: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.sha }}'
