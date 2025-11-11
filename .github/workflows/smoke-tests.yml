@@ -9,12 +9,8 @@ jobs:
   smoke-tests:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    steps:
 
-    - name: Test database connection
-      run: |
-        response=$(curl -s https://api.realomain.com/actuator/health)
-        echo $response | grep '"status":"UP"' || exit 1
+    steps:
     
     - name: Test backend API
       run: curl -f https://backend.bidgallery.publicvm.com/actuator/health || exit 1
