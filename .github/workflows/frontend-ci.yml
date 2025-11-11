@@ -60,6 +60,8 @@ jobs:
     - name: Tag and push to Docker Hub (on dev branch)
       if: github.ref == 'refs/heads/dev'
       run: |
-        docker tag bidgallery-frontend-dev ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:dev-${{ github.sha }}
         echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+        
+        # Push specific SHA for precise deployment
+        docker tag bidgallery-frontend-dev ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:dev-${{ github.sha }}
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:dev-${{ github.sha }}
