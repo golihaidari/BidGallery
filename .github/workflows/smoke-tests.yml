@@ -10,16 +10,17 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-    - name: Test frontend
-      run: curl -f https://frontend.realdomain.com/ || exit 1
-      
-    - name: Test backend API
-      run: curl -f https://api.realdomain.com/actuator/health || exit 1
-      
+
     - name: Test database connection
       run: |
         response=$(curl -s https://api.realomain.com/actuator/health)
         echo $response | grep '"status":"UP"' || exit 1
+    
+    - name: Test backend API
+      run: curl -f https://backend.bidgallery.publicvm.com/actuator/health || exit 1
+
+    - name: Test frontend  
+      run: curl -f https://frontend.bidgallery.publicvm.com/ || exit 1
         
     - name: Deployment success
       run: echo All services deployed and healthy!"

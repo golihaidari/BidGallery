@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: ["E2E Tests"]
     types: [completed]
-    #branches: [main] so now triggering on eachE2E test
+    branches: [main] #triggering on main after e2e test
 
 jobs:
   security-scan:
