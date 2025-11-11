@@ -1,6 +1,10 @@
 name: Backend CD
 
-on:
+on: 
+  push:
+    branches: [main]
+    paths: ['backend/**']
+    
   pull_request:
     branches: [main]
     types: [closed]           # Only when PR is merged
@@ -8,7 +12,6 @@ on:
 
 jobs:
   backend-cd:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     #environment: production
     

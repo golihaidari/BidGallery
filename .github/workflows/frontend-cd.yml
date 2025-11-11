@@ -1,6 +1,10 @@
 name: Frontend CD
 
 on:
+  push:
+    branches: [main]
+    paths: ['frontend/**']
+    
   pull_request:
     branches: [main]
     types: [closed]           # Only when PR is merged
@@ -8,7 +12,6 @@ on:
 
 jobs:
   frontend-cd:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     
     steps:
