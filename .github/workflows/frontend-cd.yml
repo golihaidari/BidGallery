@@ -23,7 +23,7 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Deploy to CapRover
-      uses: caprover/deploy-from-github@v1.1.1 
+      uses: caprover/deploy-from-github@v1.1.0 
       with:
         server: '${{ secrets.CAPROVER_URL}}'
         app: 'frontend'
