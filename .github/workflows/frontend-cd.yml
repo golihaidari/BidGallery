@@ -27,10 +27,10 @@ jobs:
         docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest
     
     - name: Deploy to CapRover
-      uses: caprover/deploy-from-github@v1.1.0
+      uses: caprover/deploy-from-github@v1.1.1
       with:
         server: '${{ secrets.CAPROVER_URL}}'
         app: 'frontend'
         token: '${{ secrets.CAPROVER_APP_TOKEN_FRONTEND}}'
-        image: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest'
+        
         
