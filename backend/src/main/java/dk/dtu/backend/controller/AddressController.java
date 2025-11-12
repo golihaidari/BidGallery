@@ -1,14 +1,21 @@
 package dk.dtu.backend.controller;
 
-import dk.dtu.backend.persistence.entity.Address;
-import dk.dtu.backend.service.AddressService;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import dk.dtu.backend.persistence.entity.Address;
+import dk.dtu.backend.service.AddressService;
 
 @RestController
 @RequestMapping("/api/addresses")
@@ -17,7 +24,7 @@ public class AddressController {
     @Autowired
     private AddressService addressService;
 
-    // -------------------CREATE-------------------------------
+    // -------------------CREATE-------------------------
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ResponseEntity<Address> createAddress(@RequestBody Address address) {
