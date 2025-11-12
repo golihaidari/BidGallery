@@ -57,7 +57,7 @@ jobs:
     - name: Build Docker image using docker-compose
       run: |
         # Now docker-compose has the .env.development file it needs
-        docker compose build backend-dev
+        docker compose build backend
 
     - name: Debug - Check what images were built
       run: |
@@ -74,5 +74,5 @@ jobs:
     - name: Tag and push to Docker Hub (on dev branch)
       if: github.ref == 'refs/heads/dev'
       run: |
-        docker tag bidgallery-backend-dev ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest
+        docker tag bidgallery-backend ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest
