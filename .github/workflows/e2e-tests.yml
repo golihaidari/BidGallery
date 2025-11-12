@@ -58,7 +58,7 @@ jobs:
       run: |
         cd e2e
         npm ci
-        npx cypress run --config baseUrl=http://localhost:5173
+        CYPRESS_BASE_URL=http://localhost:80 npx cypress run
         
     - name: Cleanup
       if: always()
