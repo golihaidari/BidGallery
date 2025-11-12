@@ -22,11 +22,15 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    - name: Pull the exact image from CI
+      run: |
+        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest
+    
     - name: Deploy to CapRover
-      uses: caprover/deploy-from-github@v1.1.0 
+      uses: caprover/deploy-from-github@v1.1.0
       with:
         server: '${{ secrets.CAPROVER_URL}}'
         app: 'frontend'
         token: '${{ secrets.CAPROVER_APP_TOKEN_FRONTEND}}'
-        image: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:dev-${{ github.sha }}'
-    
+        image: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest'
+        
