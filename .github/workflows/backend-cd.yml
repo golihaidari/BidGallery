@@ -16,16 +16,13 @@ jobs:
     #environment: production
     
     steps:
-    - name: Login to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-    - name: Deploy to CapRover
-      uses: caprover/deploy-from-github@v1.1.0
-      with:
-        server: '${{ secrets.CAPROVER_URL}}'
-        app: 'backend'
-        token: '${{ secrets.CAPROVER_APP_TOKEN_BACKEND}}'
-        image: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest'
+    - name: Deploy backend to CapRover
+      run: |
+        curl -X POST \
+          "${{ secrets.CAPROVER_URL }}/api/v2/user/apps/appData/backend" \
+          -H "Content-Type: application/json" \
+          -H "x-captain-auth: ${{ secrets.CAPROVER_APP_TOKEN_BACKEND }}" \
+          -d '{
+            "instanceCount": 1,
+            "imageName": "${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest"
+          }
