@@ -16,19 +16,19 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
-    - name: Create frontend environment file from secrets
+
+    - name: Create environment files for production
       run: |
-        # Create the .env.development file that docker-compose expects
-        cat > frontend/.env.development << EOF
-        VITE_API_BASE_URL=http://localhost:8080/api
+        # For production build (CapRover) - use relative path
+        cat > frontend/.env.production << EOF
+        VITE_API_BASE_URL=/api
         VITE_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
         VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
         VITE_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
         VITE_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
         EOF
-        
-        echo "=== Frontend environment file created ==="
+              
+        echo "=== Production environment file created ==="
         cat frontend/.env.development
       
     - name: Setup Node.js
@@ -55,7 +55,8 @@ jobs:
     - name: Build Docker image using docker-compose
       run: |
         # Now docker-compose has the .env.development file it needs
-        docker compose build frontend-dev
+        # Override to disable proxy for production
+        docker compose build frontend
     
     - name: Debug - Check what images were built
       run: |
@@ -71,5 +72,5 @@ jobs:
     - name: Tag and push to Docker Hub (on dev branch only)
       if: github.ref == 'refs/heads/dev'
       run: |
-        docker tag bidgallery-frontend-dev ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest
+        docker tag bidgallery-frontend ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest

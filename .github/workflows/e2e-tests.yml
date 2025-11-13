@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: [staging,dev] 
     paths: ['frontend/**', 'backend/**']
+    types: [opened, synchronize, reopened]
 
 jobs:
   e2e-tests:
@@ -43,13 +44,30 @@ jobs:
     - name: Build and start services using docker-compose
       run: |
         # Now docker-compose has ALL the env files it needs
-        docker compose --profile dev up -d --build
+        docker compose --profile app-local up -d --build
         sleep 30
 
     - name: Check service status
       run: |
         echo "=== Container Status ==="
         docker compose ps
+
+        echo "=== FRONTEND-DEV LOGS ==="
+        docker compose logs frontend-dev  # Use the service name: frontend-dev
+        
+        echo "=== BACKEND LOGS ==="  
+        docker compose logs backend
+        
+        echo "=== CHECK FRONTEND-DEV FILES ==="
+        docker compose exec frontend-dev ls -la /usr/share/nginx/html/  # Use frontend-dev
+
+        echo "=== CHECK NGINX STATUS ==="
+        docker compose exec frontend-dev nginx -t  # Use frontend-dev
+        docker compose exec frontend-dev ps aux    # Use frontend-dev
+        
+        echo "=== TEST PORTS ==="
+        curl -f http://localhost:5173 && echo "Port 5173: OK" || echo "Port 5173: FAIL"
+        curl -f http://localhost:8080/actuator/health && echo "Backend: OK" || echo "Backend: FAIL"
         
         # Wait for backend health
         timeout 180s bash -c 'until curl -f http://localhost:8080/actuator/health; do echo "Waiting for backend..."; sleep 10; done'
