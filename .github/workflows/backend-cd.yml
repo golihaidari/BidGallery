@@ -16,9 +16,27 @@ jobs:
     #environment: production
     
     steps:
-    - name: Deploy backend to CapRover
+    - name: Debug - Check current setup
       run: |
-        curl -X POST \
+        echo "=== DEBUG INFO ==="
+        echo "CapRover URL: ${{ secrets.CAPROVER_URL }}"
+        echo "DockerHub Username: ${{ secrets.DOCKERHUB_USERNAME }}"
+        echo "Backend token exists: ${{ secrets.CAPROVER_APP_TOKEN_BACKEND != '' }}"
+        echo "CapRover password exists: ${{ secrets.CAPROVER_PASSWORD != '' }}"
+        echo "=================="
+        
+    - name: Debug - Test token (will fail but show error)
+      run: |
+        echo "Testing current token..."
+        curl -v -X GET \
           "${{ secrets.CAPROVER_URL }}/api/v2/user/apps/appData/backend" \
-          -H "x-captain-auth: ${{ secrets.CAPROVER_APP_TOKEN_BACKEND }}" \
-          -d "imageName=${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest"
+          -H "x-captain-auth: ${{ secrets.CAPROVER_APP_TOKEN_BACKEND }}" || true
+        
+    - name: Deploy using Simple Password Method
+      run: |
+        echo "Deploying with password authentication..."
+        curl -X POST \
+          "${{ secrets.CAPROVER_URL }}/api/v2/user/apps/appData/backend?password=${{ secrets.CAPROVER_PASSWORD }}" \
+          -H "Content-Type: application/json" \
+          -d "{\"imageName\": \"${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest\"}"
+        echo "Deployment triggered successfully!"
