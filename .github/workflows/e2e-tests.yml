@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: [staging] 
     paths: ['frontend/**', 'backend/**']
+    types: [opened, synchronize, reopened]
 
 jobs:
   e2e-tests:
