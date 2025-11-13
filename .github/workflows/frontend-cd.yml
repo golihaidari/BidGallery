@@ -16,27 +16,28 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Debug - Check current setup
+    - name: Login to CapRover and deploy
       run: |
-        echo "=== DEBUG INFO ==="
-        echo "CapRover URL: ${{ secrets.CAPROVER_URL }}"
-        echo "DockerHub Username: ${{ secrets.DOCKERHUB_USERNAME }}"
-        echo "Frontend token exists: ${{ secrets.CAPROVER_APP_TOKEN_FRONTEND != '' }}"
-        echo "CapRover password exists: ${{ secrets.CAPROVER_PASSWORD != '' }}"
-        echo "=================="
-        
-    - name: Debug - Test token (will fail but show error)
-      run: |
-        echo "Testing current token..."
-        curl -v -X GET \
-          "${{ secrets.CAPROVER_URL }}/api/v2/user/apps/appData/frontend" \
-          -H "x-captain-auth: ${{ secrets.CAPROVER_APP_TOKEN_FRONTEND }}" || true
-        
-    - name: Deploy using Simple Password Method
-      run: |
-        echo "Deploying with password authentication..."
-        curl -X POST \
-          "${{ secrets.CAPROVER_URL }}/api/v2/user/apps/appData/frontend?password=${{ secrets.CAPROVER_PASSWORD }}" \
+        # Login and get JWT token
+        echo "Logging into CapRover..."
+        LOGIN_RESPONSE=$(curl -s -X POST \
+          "${{ secrets.CAPROVER_URL }}/api/v2/login" \
           -H "Content-Type: application/json" \
-          -d "{\"imageName\": \"${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest\"}"
-        echo "Deployment triggered successfully!"
+          -d "{\"password\": \"${{ secrets.CAPROVER_PASSWORD }}\"}")
+        
+        echo "Login response: $LOGIN_RESPONSE"
+        
+        # Extract JWT token
+        TOKEN=$(echo $LOGIN_RESPONSE | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+        echo "JWT token obtained"
+        
+        # Deploy using JWT token
+        echo "Deploying frontend..."
+        DEPLOY_RESPONSE=$(curl -s -X POST \
+          "${{ secrets.CAPROVER_URL }}/api/v2/user/apps/appData/frontend" \
+          -H "Content-Type: application/json" \
+          -H "x-captain-auth: $TOKEN" \
+          -d "{\"imageName\": \"${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest\"}")
+        
+        echo "Deploy response: $DEPLOY_RESPONSE"
+        echo "Frontend deployment triggered!"
