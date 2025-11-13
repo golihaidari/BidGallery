@@ -81,7 +81,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+        configuration.setAllowedOrigins(
+            Arrays.asList(
+            "http://localhost:5173", // Local development
+            "https://backend.bidgallery.publicvm.com",  // backend domain (for Swagger)
+            "https://frontend.bidgallery.publicvm.com" // frontend domain in CapRover
+            )
+        );
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
