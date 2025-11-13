@@ -43,7 +43,7 @@ jobs:
     - name: Build and start services using docker-compose
       run: |
         # Now docker-compose has ALL the env files it needs
-        docker compose --profile local-app up -d --build
+        docker compose --profile app-local up -d --build
         sleep 30
 
     - name: Check service status
@@ -51,18 +51,18 @@ jobs:
         echo "=== Container Status ==="
         docker compose ps
 
-         echo "=== FRONTEND LOGS ==="
-        docker compose logs frontend
+        echo "=== FRONTEND-DEV LOGS ==="
+        docker compose logs frontend-dev  # Use the service name: frontend-dev
         
         echo "=== BACKEND LOGS ==="  
         docker compose logs backend
         
-        echo "=== CHECK FRONTEND FILES ==="
-        docker compose exec frontend ls -la /usr/share/nginx/html/
+        echo "=== CHECK FRONTEND-DEV FILES ==="
+        docker compose exec frontend-dev ls -la /usr/share/nginx/html/  # Use frontend-dev
 
         echo "=== CHECK NGINX STATUS ==="
-        docker compose exec frontend nginx -t
-        docker compose exec frontend ps aux
+        docker compose exec frontend-dev nginx -t  # Use frontend-dev
+        docker compose exec frontend-dev ps aux    # Use frontend-dev
         
         echo "=== TEST PORTS ==="
         curl -f http://localhost:5173 && echo "Port 5173: OK" || echo "Port 5173: FAIL"
