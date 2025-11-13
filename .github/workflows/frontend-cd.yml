@@ -20,10 +20,5 @@ jobs:
       run: |
         curl -X POST \
           "${{ secrets.CAPROVER_URL }}/api/v2/user/apps/appData/frontend" \
-          -H "Content-Type: application/json" \
           -H "x-captain-auth: ${{ secrets.CAPROVER_APP_TOKEN_FRONTEND }}" \
-          -d '{
-            "instanceCount": 1,
-            "imageName": "${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest"
-          }'
-        
+          -d "imageName=${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest"
