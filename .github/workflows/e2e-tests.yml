@@ -43,7 +43,7 @@ jobs:
     - name: Build and start services using docker-compose
       run: |
         # Now docker-compose has ALL the env files it needs
-        docker compose --profile app up -d --build
+        docker compose --profile local-app up -d --build
         sleep 30
 
     - name: Check service status

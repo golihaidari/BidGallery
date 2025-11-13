@@ -56,7 +56,7 @@ jobs:
       run: |
         # Now docker-compose has the .env.development file it needs
         # Override to disable proxy for production
-        BACKEND_PROXY="" docker compose build frontend
+        docker compose build frontend
     
     - name: Debug - Check what images were built
       run: |

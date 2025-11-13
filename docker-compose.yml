@@ -84,7 +84,7 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     networks: [app-network]
-    profiles: [app]  # <- Separate infrastructure
+    profiles: [app, app-local]  # <- Separate infrastructure
 
   backend:
     build: 
@@ -103,14 +103,12 @@ services:
       database:
         condition: service_healthy
     networks: [app-network]
-    profiles: [app]  
+    profiles: [app, app-local]  
 
   frontend:
     build: 
       context: ./frontend
       dockerfile: Dockerfile
-    environment:
-      - BACKEND_PROXY=http://backend:8080/api  # ← NGINX proxies in local Docker
     env_file:
       - ./frontend/.env.development
     ports: ["5173:80"]
@@ -119,6 +117,22 @@ services:
       backend:  
         condition: service_healthy
     profiles: [app]
+
+  frontend-dev:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile.local
+    env_file:
+      - ./frontend/.env.development
+    ports: ["5173:80"]
+    depends_on:
+      backend:  
+        condition: service_healthy
+    networks:
+      app-network:
+        aliases:
+          - frontend
+    profiles: [app-local]
 
 volumes:
   db_data:
