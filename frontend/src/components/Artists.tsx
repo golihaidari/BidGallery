@@ -7,7 +7,7 @@ import Loader from "@components/common/Loader";
 import "./extraCss/Artists.css";
 import { API_CONFIG } from "../config";
 
-//const dataUrl = "/data/artists.json"; triger 14-13 
+//const dataUrl = "/data/artists.json"; triger 15-13 
 const dataUrl =`${API_CONFIG.baseURL}/artists`
 
 const ArtistsPage = () => {
