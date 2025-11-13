@@ -4,12 +4,18 @@ on:
   pull_request:
     branches: [staging,dev] 
     paths: ['frontend/**', 'backend/**']
+    #types: [opened, synchronize, reopened]
 
 jobs:
   e2e-tests:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Checkout code from PR branch (dev)
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref }}
+
     - name: Checkout code
       uses: actions/checkout@v4
       
@@ -40,16 +46,49 @@ jobs:
         
         echo "=== All environment files created for docker-compose ==="
 
+    - name: Debug - Check files in workspace
+      run: |
+        echo "=== Current branch ==="
+        git branch -a
+        
+        echo "=== Dockerfile.dev check ==="
+        ls -la frontend/Dockerfile.dev || echo "Dockerfile.dev not found"
+        find . -name "*ockerfile*" -type f
+        
+        echo "=== nginx config check ==="
+        ls -la frontend/nginx/ || echo "nginx directory not found"
+        find . -name "default.conf" -type f
+        
+        echo "=== All files in frontend/ ==="
+        ls -la frontend/
+
     - name: Build and start services using docker-compose
       run: |
         # Now docker-compose has ALL the env files it needs
-        docker compose --profile dev up -d --build
+        docker compose --profile app-local up -d --build
         sleep 30
 
     - name: Check service status
       run: |
         echo "=== Container Status ==="
         docker compose ps
+
+        echo "=== FRONTEND-DEV LOGS ==="
+        docker compose logs frontend-dev  # Use the service name: frontend-dev
+        
+        echo "=== BACKEND LOGS ==="  
+        docker compose logs backend
+        
+        echo "=== CHECK FRONTEND-DEV FILES ==="
+        docker compose exec frontend-dev ls -la /usr/share/nginx/html/  # Use frontend-dev
+
+        echo "=== CHECK NGINX STATUS ==="
+        docker compose exec frontend-dev nginx -t  # Use frontend-dev
+        docker compose exec frontend-dev ps aux    # Use frontend-dev
+        
+        echo "=== TEST PORTS ==="
+        curl -f http://localhost:5173 && echo "Port 5173: OK" || echo "Port 5173: FAIL"
+        curl -f http://localhost:8080/actuator/health && echo "Backend: OK" || echo "Backend: FAIL"
         
         # Wait for backend health
         timeout 180s bash -c 'until curl -f http://localhost:8080/actuator/health; do echo "Waiting for backend..."; sleep 10; done'
