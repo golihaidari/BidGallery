@@ -16,9 +16,27 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Deploy frontend to CapRover
+    - name: Debug - Check current setup
       run: |
-        curl -X POST \
+        echo "=== DEBUG INFO ==="
+        echo "CapRover URL: ${{ secrets.CAPROVER_URL }}"
+        echo "DockerHub Username: ${{ secrets.DOCKERHUB_USERNAME }}"
+        echo "Frontend token exists: ${{ secrets.CAPROVER_APP_TOKEN_FRONTEND != '' }}"
+        echo "CapRover password exists: ${{ secrets.CAPROVER_PASSWORD != '' }}"
+        echo "=================="
+        
+    - name: Debug - Test token (will fail but show error)
+      run: |
+        echo "Testing current token..."
+        curl -v -X GET \
           "${{ secrets.CAPROVER_URL }}/api/v2/user/apps/appData/frontend" \
-          -H "x-captain-auth: ${{ secrets.CAPROVER_APP_TOKEN_FRONTEND }}" \
-          -d "imageName=${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest"
+          -H "x-captain-auth: ${{ secrets.CAPROVER_APP_TOKEN_FRONTEND }}" || true
+        
+    - name: Deploy using Simple Password Method
+      run: |
+        echo "Deploying with password authentication..."
+        curl -X POST \
+          "${{ secrets.CAPROVER_URL }}/api/v2/user/apps/appData/frontend?password=${{ secrets.CAPROVER_PASSWORD }}" \
+          -H "Content-Type: application/json" \
+          -d "{\"imageName\": \"${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest\"}"
+        echo "Deployment triggered successfully!"
