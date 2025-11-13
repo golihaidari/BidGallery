@@ -89,7 +89,7 @@ services:
   backend:
     build: 
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     env_file:
       - ./backend/.env.development
     ports: ["8080:8080"]
@@ -121,7 +121,7 @@ services:
   frontend-dev:
     build: 
       context: ./frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: dockerfile.dev
     env_file:
       - ./frontend/.env.development
     ports: ["5173:80"]
