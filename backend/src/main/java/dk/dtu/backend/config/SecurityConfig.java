@@ -85,7 +85,7 @@ public class SecurityConfig {
             Arrays.asList(
             "http://localhost:5173", // Local development
             "https://backend.bidgallery.publicvm.com",  // backend domain (for Swagger)
-            "https://your-frontend-domain.caprover.com" // frontend domain in CapRover
+            "https://frontend.bidgallery.publicvm.com" // frontend domain in CapRover
             )
         );
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
