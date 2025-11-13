@@ -21,13 +21,13 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-        
-    - name: Deploy to CapRover using CLI
-      run: |
-        npm install -g caprover
-        caprover deploy \
-          --caproverUrl ${{ secrets.CAPROVER_URL }} \
-          --caproverApp frontend \
-          --caproverToken ${{ secrets.CAPROVER_APP_TOKEN_FRONTEND }} \
-          --imageName ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest
+
+    
+    - name: Deploy to CapRover
+      uses: caprover/deploy-from-github@v1.1.0
+      with:
+        server: '${{ secrets.CAPROVER_URL}}'
+        app: 'frontend'
+        token: '${{ secrets.CAPROVER_APP_TOKEN_FRONTEND}}'
+        image: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest'
         
