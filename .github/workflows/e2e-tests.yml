@@ -50,6 +50,23 @@ jobs:
       run: |
         echo "=== Container Status ==="
         docker compose ps
+
+         echo "=== FRONTEND LOGS ==="
+        docker compose logs frontend
+        
+        echo "=== BACKEND LOGS ==="  
+        docker compose logs backend
+        
+        echo "=== CHECK FRONTEND FILES ==="
+        docker compose exec frontend ls -la /usr/share/nginx/html/
+
+        echo "=== CHECK NGINX STATUS ==="
+        docker compose exec frontend nginx -t
+        docker compose exec frontend ps aux
+        
+        echo "=== TEST PORTS ==="
+        curl -f http://localhost:5173 && echo "Port 5173: OK" || echo "Port 5173: FAIL"
+        curl -f http://localhost:8080/actuator/health && echo "Backend: OK" || echo "Backend: FAIL"
         
         # Wait for backend health
         timeout 180s bash -c 'until curl -f http://localhost:8080/actuator/health; do echo "Waiting for backend..."; sleep 10; done'
