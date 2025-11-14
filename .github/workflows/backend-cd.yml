@@ -8,11 +8,19 @@ on:
 
 jobs:
   backend-cd:
+    # Only deploy if security scan succeeded
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    #environment: production
     
     steps:
+    - name: Deploy
+      run: echo "Security passed - deploying..."
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: main  # Checkout the merged code
+
     - name: Login to CapRover and deploy
       run: |
         # Login and get JWT token
