@@ -2,7 +2,7 @@ name: Frontend E2E Tests
 
 on:
   workflow_run:
-    workflows: ["Frontend CI"]  # Teams get fast feedback
+    workflows: ["Frontend CI", "Backend CI"]  # Teams get fast feedback
     types: [completed]
     branches: [staging]
 
