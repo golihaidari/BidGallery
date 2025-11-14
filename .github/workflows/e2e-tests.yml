@@ -1,4 +1,4 @@
-name: Frontend E2E Tests
+name: E2E Tests
 
 on:
   workflow_run:
@@ -15,7 +15,8 @@ jobs:
     - name: Checkout code from PR branch (dev)
       uses: actions/checkout@v4
       with:
-        ref: ${{ github.head_ref }}
+        ref: ${{ github.event.workflow_run.head_branch }}  # FIX: Use head_branch from workflow_run
+        #ref: ${{ github.head_ref }}
 
     - name: Checkout code
       uses: actions/checkout@v4
