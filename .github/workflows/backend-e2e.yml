@@ -1,0 +1,109 @@
+name: Backend E2E Tests 
+
+on:
+  workflow_run:
+    workflows: ["Backend CI"]  # Teams get fast feedback
+    types: [completed]
+    branches: [staging]
+
+jobs:
+  e2e-tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code from PR branch (dev)
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref }}
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Create ALL environment files for docker-compose
+      run: |
+        # Backend .env.development
+        cat > backend/.env.development << EOF
+        SPRING_PROFILES_ACTIVE=development
+        SPRING_DATASOURCE_URL=jdbc:mariadb://database:3306/bidgallery
+        SPRING_DATASOURCE_USERNAME=admin
+        SPRING_DATASOURCE_PASSWORD=password
+        SPRING_JPA_HIBERNATE_DDL_AUTO=update
+        FIREBASE_SERVICE_ACCOUNT_FILE=/app/firebase-service.json
+        EOF
+        
+        # Frontend .env.development
+        cat > frontend/.env.development << EOF
+        VITE_API_BASE_URL=http://localhost:8080/api
+        VITE_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
+        VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
+        VITE_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+        VITE_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
+        EOF
+        
+        # Firebase service account
+        mkdir -p backend/src/main/resources
+        echo "${{ secrets.FIREBASE_SERVICE_JSON_B64 }}" | base64 --decode > backend/src/main/resources/firebase-service.json
+        
+        echo "=== All environment files created for docker-compose ==="
+
+    - name: Debug - Check files in workspace
+      run: |
+        echo "=== Current branch ==="
+        git branch -a
+        
+        echo "=== Dockerfile.dev check ==="
+        ls -la frontend/Dockerfile.dev || echo "Dockerfile.dev not found"
+        find . -name "*ockerfile*" -type f
+        
+        echo "=== nginx config check ==="
+        ls -la frontend/nginx/ || echo "nginx directory not found"
+        find . -name "default.conf" -type f
+        
+        echo "=== All files in frontend/ ==="
+        ls -la frontend/
+
+    - name: Build and start services using docker-compose
+      run: |
+        # Now docker-compose has ALL the env files it needs
+        docker compose --profile app-local up -d --build
+        sleep 30
+
+    - name: Check service status
+      run: |
+        echo "=== Container Status ==="
+        docker compose ps
+
+        echo "=== FRONTEND-DEV LOGS ==="
+        docker compose logs frontend-dev  # Use the service name: frontend-dev
+        
+        echo "=== BACKEND LOGS ==="  
+        docker compose logs backend
+        
+        echo "=== CHECK FRONTEND-DEV FILES ==="
+        docker compose exec frontend-dev ls -la /usr/share/nginx/html/  # Use frontend-dev
+
+        echo "=== CHECK NGINX STATUS ==="
+        docker compose exec frontend-dev nginx -t  # Use frontend-dev
+        docker compose exec frontend-dev ps aux    # Use frontend-dev
+        
+        echo "=== TEST PORTS ==="
+        curl -f http://localhost:5173 && echo "Port 5173: OK" || echo "Port 5173: FAIL"
+        curl -f http://localhost:8080/actuator/health && echo "Backend: OK" || echo "Backend: FAIL"
+        
+        # Wait for backend health
+        timeout 180s bash -c 'until curl -f http://localhost:8080/actuator/health; do echo "Waiting for backend..."; sleep 10; done'
+
+    - name: Wait for potential concurrent CI completions
+      run: sleep 10  # Small buffer if both CI finish around same time
+
+    - name: Run Cypress tests
+      run: |
+        cd e2e
+        npm ci
+        npx cypress run --config baseUrl=http://localhost:5173
+        
+    - name: Cleanup
+      if: always()
+      run: |
+        docker compose down -v
