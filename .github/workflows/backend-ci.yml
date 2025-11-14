@@ -12,7 +12,6 @@ on:
 jobs:
   backend-ci:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name }}  # dev, staging, or main
     
     steps:
     - name: Checkout code
