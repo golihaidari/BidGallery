@@ -46,9 +46,11 @@ jobs:
       if: always()
       with:
         sarif_file: 'trivy-backend-results.sarif'
+        category: 'backend-container'
         
     - name: Upload frontend security results
       uses: github/codeql-action/upload-sarif@v2
       if: always()
       with:
         sarif_file: 'trivy-frontend-results.sarif'
+        category: 'frontend-container'  
