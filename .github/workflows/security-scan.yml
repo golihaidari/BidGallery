@@ -9,6 +9,11 @@ on:
     branches: [main]
     paths: ['frontend/**', 'backend/**']
 
+permissions:
+  security-events: write
+  actions: read
+  contents: read
+
 jobs:
   security-scan:
     runs-on: ubuntu-latest
