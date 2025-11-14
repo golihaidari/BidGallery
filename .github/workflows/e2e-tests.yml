@@ -1,21 +1,19 @@
 name: E2E Tests
 
 on:
-  workflow_run:
-    workflows: ["Frontend CI", "Backend CI"]  # Teams get fast feedback
-    types: [completed]
+  push:
     branches: [staging]
+    paths: ['frontend/**', 'backend/**']
 
 jobs:
   e2e-tests:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code from PR branch (dev)
       uses: actions/checkout@v4
       with:
-        ref: ${{ github.event.workflow_run.head_branch }}  # FIX: Use head_branch from workflow_run
+        ref: ${{ github.head_ref }}  # FIX: Use head_branch from workflow_run
         
       
     - name: Create ALL environment files for docker-compose
