@@ -17,9 +17,6 @@ jobs:
       with:
         ref: ${{ github.event.workflow_run.head_branch }}  # FIX: Use head_branch from workflow_run
         #ref: ${{ github.head_ref }}
-
-    - name: Checkout code
-      uses: actions/checkout@v4
       
     - name: Create ALL environment files for docker-compose
       run: |
