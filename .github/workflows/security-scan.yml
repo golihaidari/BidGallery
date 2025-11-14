@@ -33,6 +33,7 @@ jobs:
         image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest'
         format: 'sarif'
         output: 'trivy-backend-results.sarif'
+        trivy-config: '--skip-version-check'
         
     - name: Scan frontend image
       uses: aquasecurity/trivy-action@master
@@ -40,17 +41,20 @@ jobs:
         image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest'
         format: 'sarif'
         output: 'trivy-frontend-results.sarif'
+        trivy-config: '--skip-version-check'
         
     - name: Upload backend security results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-backend-results.sarif'
         category: 'backend-container'
+        wait-for-processing: true
         
     - name: Upload frontend security results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-frontend-results.sarif'
-        category: 'frontend-container'  
+        category: 'frontend-container' 
+        wait-for-processing: true 
