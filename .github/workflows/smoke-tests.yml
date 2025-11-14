@@ -11,11 +11,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Test backend API
-      run: curl -f https://backend.bidgallery.publicvm.com/actuator/health || exit 1
+    - name: Wait for backend to be ready
+      run: |
+        echo "Waiting for backend deployment to complete..."
+        MAX_RETRIES=12  # 2 minutes total
+        RETRY_COUNT=0
+        
+        until curl -f https://backend.bidgallery.publicvm.com/actuator/health; do
+          RETRY_COUNT=$((RETRY_COUNT+1))
+          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+            echo "Backend health check failed after $MAX_RETRIES attempts"
+            exit 1
+          fi
+          echo "Backend not ready yet, retrying in 10 seconds... ($RETRY_COUNT/$MAX_RETRIES)"
+          sleep 10
+        done
+        echo "✅ Backend is healthy!"
 
-    - name: Test frontend  
-      run: curl -f https://frontend.bidgallery.publicvm.com/ || exit 1
+    - name: Wait for frontend to be ready
+      run: |
+        echo "Waiting for frontend deployment to complete..."
+        MAX_RETRIES=12
+        RETRY_COUNT=0
+        
+        until curl -f https://frontend.bidgallery.publicvm.com/; do
+          RETRY_COUNT=$((RETRY_COUNT+1))
+          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+            echo "Frontend health check failed after $MAX_RETRIES attempts"
+            exit 1
+          fi
+          echo "Frontend not ready yet, retrying in 10 seconds... ($RETRY_COUNT/$MAX_RETRIES)"
+          sleep 10
+        done
+        echo "Frontend is healthy!"
         
     - name: Deployment success
-      run: echo All services deployed and healthy!"
+      run: echo "All services deployed and healthy!"

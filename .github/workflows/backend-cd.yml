@@ -15,6 +15,11 @@ jobs:
     steps:
     - name: Deploy
       run: echo "Security passed - deploying..."
+    
+    - name: Wait for frontend deployment
+      run: |
+        echo "Waiting for frontend deployment to complete..."
+        sleep 60  # Wait 1 minute for frontend to finish
 
     - name: Checkout code
       uses: actions/checkout@v4
