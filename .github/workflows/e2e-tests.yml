@@ -1,10 +1,9 @@
 name: E2E Tests
 
 on:
-  pull_request:
-    branches: [staging,dev] 
+  push:
+    branches: [staging]
     paths: ['frontend/**', 'backend/**']
-    #types: [opened, synchronize, reopened]
 
 jobs:
   e2e-tests:
@@ -14,11 +13,8 @@ jobs:
     - name: Checkout code from PR branch (dev)
       uses: actions/checkout@v4
       with:
-        ref: ${{ github.head_ref }}
-
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
+        ref: ${{ github.head_ref }}  # FIX: Use head_branch from workflow_run
+              
     - name: Create ALL environment files for docker-compose
       run: |
         # Backend .env.development
@@ -92,6 +88,9 @@ jobs:
         
         # Wait for backend health
         timeout 180s bash -c 'until curl -f http://localhost:8080/actuator/health; do echo "Waiting for backend..."; sleep 10; done'
+
+    - name: Wait for potential concurrent CI completions
+      run: sleep 10  # Small buffer if both CI finish around same time
 
     - name: Run Cypress tests
       run: |
