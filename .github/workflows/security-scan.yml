@@ -1,14 +1,16 @@
 name: Security Scan
 
 on:
-  workflow_run:
-    workflows: ["E2E Tests"]
-    types: [completed]
-    branches: [main] #triggering on main after e2e test
+  push:
+    branches: [main]
+    paths: ['frontend/**', 'backend/**']
+
+  pull_request:
+    branches: [main]
+    paths: ['frontend/**', 'backend/**']
 
 jobs:
   security-scan:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     #environment: production
     
@@ -23,21 +25,20 @@ jobs:
     - name: Pull images for scanning
       run: |
         # Pull the images that passed E2E tests
-        SHA="${{ github.event.workflow_run.head_sha }}"
-        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:$SHA
-        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:$SHA
+        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest
+        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest
         
     - name: Scan backend image
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:${{ github.event.workflow_run.head_sha }}'
+        image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest'
         format: 'sarif'
         output: 'trivy-backend-results.sarif'
         
     - name: Scan frontend image
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:${{ github.event.workflow_run.head_sha }}'
+        image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest'
         format: 'sarif'
         output: 'trivy-frontend-results.sarif'
         

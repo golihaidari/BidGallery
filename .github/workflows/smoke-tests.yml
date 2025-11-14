@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    
     - name: Test backend API
       run: curl -f https://backend.bidgallery.publicvm.com/actuator/health || exit 1
 

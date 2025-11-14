@@ -1,17 +1,14 @@
 name: Backend CD
 
 on: 
-  push:
+  workflow_run:
+    workflows: ["Security Scan"]
+    types: [completed]
     branches: [main]
-    paths: ['backend/**']
-
-  pull_request:
-    branches: [main]
-    types: [closed]           # Only when PR is merged
-    paths: ['backend/**']
 
 jobs:
   backend-cd:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     #environment: production
     

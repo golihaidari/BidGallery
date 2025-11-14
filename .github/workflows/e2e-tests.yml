@@ -1,13 +1,14 @@
 name: E2E Tests
 
 on:
-  pull_request:
-    branches: [staging] 
-    paths: ['frontend/**', 'backend/**']
-    #types: [opened, synchronize, reopened]
+  workflow_run:
+    workflows: ["Frontend CI", "Backend CI"]  # Teams get fast feedback
+    types: [completed]
+    branches: [staging]
 
 jobs:
   e2e-tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     
     steps:
@@ -92,6 +93,9 @@ jobs:
         
         # Wait for backend health
         timeout 180s bash -c 'until curl -f http://localhost:8080/actuator/health; do echo "Waiting for backend..."; sleep 10; done'
+
+    - name: Wait for potential concurrent CI completions
+      run: sleep 10  # Small buffer if both CI finish around same time
 
     - name: Run Cypress tests
       run: |
