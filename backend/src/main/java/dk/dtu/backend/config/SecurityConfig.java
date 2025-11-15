@@ -85,7 +85,13 @@ public class SecurityConfig {
             Arrays.asList(
             "http://localhost:5173", // Local development
             "https://backend.bidgallery.publicvm.com",  // backend domain (for Swagger)
-            "https://frontend.bidgallery.publicvm.com" // frontend domain in CapRover
+            "https://frontend.bidgallery.publicvm.com", // frontend domain in CapRover
+            
+            // Monitoring domains:
+            "https://grafana.bidgallery.publicvm.com",   // Grafana dashboard
+            "https://prometheus.bidgallery.publicvm.com", // Prometheus metrics
+            "https://loki.bidgallery.publicvm.com",      // Loki logs
+            "https://promtail.bidgallery.publicvm.com"   // Promtail log collector
             )
         );
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
