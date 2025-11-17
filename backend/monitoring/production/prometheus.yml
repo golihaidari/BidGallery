@@ -9,7 +9,3 @@ scrape_configs:
     scheme: https
     tls_config:
       insecure_skip_verify: true
-
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['localhost:9090']
