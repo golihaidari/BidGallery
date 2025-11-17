@@ -9,7 +9,3 @@ scrape_configs:
         labels:  
           application: 'bidgallery-backend'
           environment: 'development'
-
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['localhost:9090']
