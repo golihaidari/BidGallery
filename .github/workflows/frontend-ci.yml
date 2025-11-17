@@ -21,7 +21,7 @@ jobs:
       run: |
         # For production build (CapRover) - use relative path
         cat > frontend/.env.production << EOF
-        VITE_API_BASE_URL=https://backend.bidgallery.publicvm.com/api
+        VITE_API_URL=https://backend.bidgallery.publicvm.com/api
         VITE_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
         VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
         VITE_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
