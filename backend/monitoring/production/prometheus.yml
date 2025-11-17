@@ -5,7 +5,7 @@ scrape_configs:
   - job_name: 'bidgallery-backend'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['backend:8080']
-        labels:  
-          application: 'bidgallery-backend'
-          environment: 'development'
+      - targets: ['backend.bidgallery.publicvm.com']
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true

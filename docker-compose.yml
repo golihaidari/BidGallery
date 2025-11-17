@@ -110,7 +110,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     env_file:
-      - ./frontend/.env.development
+      - ./frontend/.env.production
     ports: ["5173:80"]
     networks: [app-network]
     depends_on:
