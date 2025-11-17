@@ -4,23 +4,23 @@ services:
   build-prometheus:
     image: golbas/prometheus:latest
     build:
-      context: ./backend/monitoring/production
+      context: ./monitoring/production
       dockerfile: dockerfile.prometheus
 
   build-loki:
     image: golbas/loki:latest
     build:
-      context: ./backend/monitoring/production
+      context: ./monitoring/production
       dockerfile: dockerfile.loki  
 
   build-promtail:
     image: golbas/promtail:latest
     build:
-      context: ./backend/monitoring/production
+      context: ./monitoring/production
       dockerfile: dockerfile.promtail  
 
   build-grafana:
     image: golbas/grafana:latest
     build:
-      context: ./backend/monitoring/production
+      context: ./monitoring/production
       dockerfile: dockerfile.grafana
