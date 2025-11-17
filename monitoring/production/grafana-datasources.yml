@@ -4,7 +4,7 @@ datasources:
   - name: Prometheus
     type: prometheus
     access: proxy
-    url: http://prometheus.bidgallery.publicvm.com:9090
+    url: http://srv-captain--prometheus:9090
     isDefault: true
     version: 1
     editable: false
@@ -12,6 +12,6 @@ datasources:
   - name: Loki
     type: loki
     access: proxy
-    url: http://loki.bidgallery.publicvm.com:3100
+    url:  http://srv-captain--loki:3100
     version: 1
     editable: false
