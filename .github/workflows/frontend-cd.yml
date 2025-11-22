@@ -3,7 +3,12 @@ name: Frontend CD
 on:
   push:
     branches: [main]
-    paths: ['frontend/**']  # Only trigger on frontend changes
+    paths: ['frontend/**']
+
+permissions:
+  security-events: write
+  actions: read
+  contents: read
 
 jobs:
   frontend-security-scan:
@@ -33,7 +38,7 @@ jobs:
         output: 'trivy-frontend-results.sarif'
         
     - name: Upload security results
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4  # Updated to v4
       if: always()
       with:
         sarif_file: 'trivy-frontend-results.sarif'
