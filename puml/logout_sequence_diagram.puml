@@ -1,0 +1,21 @@
+@startuml logout_user_sequence_diagram
+title Sequence Diagram: User Logout (Clearing HttpOnly Cookie )
+
+actor User
+participant "Frontend (React SPA)" as FE
+participant "Auth Controller\n(Backend API)" as AuthCtrl
+
+== User Initiates Logout ==
+
+User -> FE: Click "Logout"
+FE -> AuthCtrl: POST /logout\n(with session cookie)
+
+
+AuthCtrl -> FE: Set-Cookie: session=; HttpOnly\n200 OK
+note right of AuthCtrl
+  Uses CookieUtil.clearJwtCookie()
+end note
+
+FE -> User: Show Login button
+
+@enduml

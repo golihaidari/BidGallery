@@ -1,0 +1,48 @@
+@startuml login_google_user_sequence_diagram
+title Sequence Diagram: User Login / Registration (Google OAuth)
+
+actor User
+participant "Frontend (React SPA)" as FE
+participant "Auth Controller\n(Backend API)" as AuthCtrl
+participant "Auth Service\n(Business Logic)" as AuthSer
+participant "Google OAuth\n(Token Validation Endpoint)" as IdP
+database "MariaDB" as DB
+
+== Login with Google OAuth ==
+User -> FE: Click "Login with Google"
+FE -> IdP: Redirect to Google OAuth
+IdP -> User: Google login form
+User -> IdP: Enter Google credentials
+IdP -> FE: Return ID token (OAuth callback)
+FE -> AuthCtrl: POST /login/firebase\n{ id_token }
+
+' Controller validates Google token
+AuthCtrl -> IdP: Validate ID token
+IdP --> AuthCtrl: Token valid / invalid
+
+alt Invalid Google token
+  AuthCtrl -> FE: 401 Unauthorized
+  FE -> User: Show login error
+else Valid Google token
+  ' Controller extracts user info from token
+  AuthCtrl -> AuthSer: Process Google user(profile data)
+  
+  AuthSer -> DB: Check if user exists
+  DB --> AuthSer: User found / not found
+
+  alt Existing User
+    AuthSer -> AuthCtrl: Generate session token
+    AuthCtrl -> FE: Set-Cookie: session=token; HttpOnly
+    FE -> User: Redirect to app (logged in)
+
+  else New User (Registration)
+    AuthSer -> DB: Create new user record
+    DB --> AuthSer: User created
+    AuthSer -> AuthCtrl: Generate session token
+    AuthCtrl -> FE: Set-Cookie: session=token; HttpOnly
+    FE -> User: Redirect to app (registered & logged in)
+
+  end
+end
+
+@enduml

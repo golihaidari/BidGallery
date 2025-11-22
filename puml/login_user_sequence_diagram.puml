@@ -1,0 +1,64 @@
+@startuml login_user_sequence_diagram
+title Sequence Diagram: User Login / Registration (Email & Password)
+
+actor User
+participant "Frontend (React SPA)" as FE
+participant "Auth Controller\n(Backend API)" as AuthCtrl
+participant "Auth Service\n(Business Logic)" as AuthSer
+database "MariaDB" as DB
+
+== User Login ==
+User -> FE: Enter email + password\nclick "Login"
+FE -> AuthCtrl: POST /login\n{ email, password }
+
+' Controller validates input first
+AuthCtrl -> AuthCtrl: Validate email & password format
+
+alt Invalid input
+  AuthCtrl -> FE: 400 Bad Request\n(validation error)
+  FE -> User: Show validation error
+else Input valid
+  AuthCtrl -> AuthSer: Authenticate user(credentials)
+  AuthSer -> DB: Fetch user by email
+  DB --> AuthSer: User record
+
+  alt Password correct
+    AuthSer -> AuthCtrl: Return user + session token
+    AuthCtrl -> FE: Set-Cookie: session=token; HttpOnly\n200 OK
+    FE -> User: Redirect to app (logged in)
+  else Wrong password
+    AuthSer -> AuthCtrl: Authentication failed
+    AuthCtrl -> FE: 401 Unauthorized
+    FE -> User: Show error message
+  end
+end
+
+== User Registration ==
+User -> FE: Enter data(email,password,name,...)\nclick "Register"
+FE -> AuthCtrl: POST /register\n{ data}
+
+' Controller validates registration fields
+AuthCtrl -> AuthCtrl: Validate registration data
+
+alt Invalid input
+  AuthCtrl -> FE: 400 Bad Request\n(validation errors)
+  FE -> User: Show validation error
+else Input valid
+  AuthCtrl -> AuthSer: Register user(data)
+  AuthSer -> DB: Check if email exists
+  DB --> AuthSer: Exists? yes/no
+
+  alt Email exists
+    AuthSer -> AuthCtrl: Registration failed
+    AuthCtrl -> FE: error: email already exists
+    FE -> User: Show error message
+  else New user
+    AuthSer -> DB: Insert new user
+    DB --> AuthSer: User created
+    AuthSer -> AuthCtrl: Return user 
+    AuthCtrl -> FE: \n201 User created
+    FE -> User: Redirect to login page(registered)
+  end
+end
+
+@enduml
