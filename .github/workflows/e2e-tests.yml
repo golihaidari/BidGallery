@@ -1,3 +1,4 @@
+# e2e.yml
 name: E2E Tests
 
 on:
@@ -10,87 +11,60 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code from PR branch (dev)
+    - name: Checkout code
       uses: actions/checkout@v4
+      
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
       with:
-        ref: ${{ github.head_ref }}  # FIX: Use head_branch from workflow_run
-              
-    - name: Create ALL environment files for docker-compose
-      run: |
-        # Backend .env.development
-        cat > backend/.env.development << EOF
-        SPRING_PROFILES_ACTIVE=development
-        SPRING_DATASOURCE_URL=jdbc:mariadb://database:3306/bidgallery
-        SPRING_DATASOURCE_USERNAME=admin
-        SPRING_DATASOURCE_PASSWORD=password
-        SPRING_JPA_HIBERNATE_DDL_AUTO=update
-        FIREBASE_SERVICE_ACCOUNT_FILE=/app/firebase-service.json
-        EOF
-        
-        # Frontend .env.development
-        cat > frontend/.env.development << EOF
-        VITE_API_URL=http://localhost:8080/api
-        VITE_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
-        VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
-        VITE_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
-        VITE_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
-        EOF
-        
-        # Firebase service account
-        mkdir -p backend/src/main/resources
-        echo "${{ secrets.FIREBASE_SERVICE_JSON_B64 }}" | base64 --decode > backend/src/main/resources/firebase-service.json
-        
-        echo "=== All environment files created for docker-compose ==="
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Debug - Check files in workspace
+    - name: Pull images from Docker Hub
       run: |
-        echo "=== Current branch ==="
-        git branch -a
-        
-        echo "=== Dockerfile.dev check ==="
-        ls -la frontend/Dockerfile.dev || echo "Dockerfile.dev not found"
-        find . -name "*ockerfile*" -type f
-        
-        echo "=== nginx config check ==="
-        ls -la frontend/nginx/ || echo "nginx directory not found"
-        find . -name "default.conf" -type f
-        
-        echo "=== All files in frontend/ ==="
-        ls -la frontend/
+        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest
+        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest
 
-    - name: Build and start services using docker-compose
+    - name: Create docker-compose for E2E with pulled images
       run: |
-        # Now docker-compose has ALL the env files it needs
-        docker compose --profile app-local up -d --build
+        cat > docker-compose.e2e.yml << EOF
+        version: '3.8'
+        services:
+          frontend:
+            image: ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-frontend:latest
+            ports:
+              - "5173:80"
+            environment:
+              - VITE_API_URL=http://backend:8080/api
+            depends_on:
+              - backend
+
+          backend:
+            image: ${{ secrets.DOCKERHUB_USERNAME }}/bidgallery-backend:latest
+            ports:
+              - "8080:8080"
+            environment:
+              - SPRING_PROFILES_ACTIVE=development
+              - SPRING_DATASOURCE_URL=jdbc:mariadb://database:3306/bidgallery
+              - SPRING_DATASOURCE_USERNAME=admin
+              - SPRING_DATASOURCE_PASSWORD=password
+            depends_on:
+              - database
+
+          database:
+            image: mariadb:10.11
+            environment:
+              MYSQL_ROOT_PASSWORD: root
+              MYSQL_DATABASE: bidgallery
+              MYSQL_USER: admin
+              MYSQL_PASSWORD: password
+        EOF
+
+    - name: Start services for E2E tests
+      run: |
+        docker-compose -f docker-compose.e2e.yml up -d
         sleep 30
-
-    - name: Check service status
-      run: |
-        echo "=== Container Status ==="
-        docker compose ps
-
-        echo "=== FRONTEND-DEV LOGS ==="
-        docker compose logs frontend-dev  # Use the service name: frontend-dev
-        
-        echo "=== BACKEND LOGS ==="  
-        docker compose logs backend
-        
-        echo "=== CHECK FRONTEND-DEV FILES ==="
-        docker compose exec frontend-dev ls -la /usr/share/nginx/html/  # Use frontend-dev
-
-        echo "=== CHECK NGINX STATUS ==="
-        docker compose exec frontend-dev nginx -t  # Use frontend-dev
-        docker compose exec frontend-dev ps aux    # Use frontend-dev
-        
-        echo "=== TEST PORTS ==="
-        curl -f http://localhost:5173 && echo "Port 5173: OK" || echo "Port 5173: FAIL"
-        curl -f http://localhost:8080/actuator/health && echo "Backend: OK" || echo "Backend: FAIL"
-        
-        # Wait for backend health
-        timeout 180s bash -c 'until curl -f http://localhost:8080/actuator/health; do echo "Waiting for backend..."; sleep 10; done'
-
-    - name: Wait for potential concurrent CI completions
-      run: sleep 10  # Small buffer if both CI finish around same time
+        docker-compose -f docker-compose.e2e.yml ps
 
     - name: Run Cypress tests
       run: |
@@ -101,4 +75,4 @@ jobs:
     - name: Cleanup
       if: always()
       run: |
-        docker compose down -v
+        docker-compose -f docker-compose.e2e.yml down -v
