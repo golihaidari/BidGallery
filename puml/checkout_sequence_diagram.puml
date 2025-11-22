@@ -3,7 +3,7 @@ title Checkout Sequence Diagram
 
 actor User
 participant "Frontend (React)" as FE
-participant "Backend (Jersey)" as BE
+participant "Backend API(Spring Boot))" as BE
 database "MariaDB" as DB
 participant "Payment Provider (Mock)" as Pay
 
@@ -17,7 +17,7 @@ FE --> User : Display products
 
 == Bidding ==
 User -> FE : Select product + enter bid
-FE -> BE : POST /bid {productId, bidValue}
+FE -> BE : POST /checkout/placebid {productId, bidValue}
 BE -> DB : Validate bid & product
 DB --> BE : Product details
 BE --> FE : Bid accepted → added to cart
@@ -28,7 +28,18 @@ User -> FE : Go to cart
 FE -> User : Show cart summary (review items, total)
 
 User -> FE : Proceed to shipping
-FE -> User : Enter shipping address
+alt Logged-in User
+    FE -> BE : GET /auth/address (with JWT cookie)
+    BE -> DB : Fetch saved address
+    DB --> BE : User address found
+    BE --> FE : Return address
+    FE -> User : Prefill shipping form (editable)
+else Guest User
+    FE -> User : Show empty shipping form
+end
+
+User -> FE : Enter / edit shipping address and proceed
+FE -> User : Show Payment page
 
 User -> FE : Enter payment details (card/mobile/gift card)
 FE -> Pay : Send payment details
@@ -36,7 +47,7 @@ Pay --> FE : Return payment token / approval
 
 == Confirm Order ==
 User -> FE : Confirm order
-FE -> BE : POST /order {cart, address, paymentToken}
+FE -> BE : POST /checkout/placeorder {cart, address, paymentToken}
 BE -> Pay : Verify payment token
 Pay --> BE : Payment success
 BE -> DB : Save order + items, status='Paid'

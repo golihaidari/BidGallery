@@ -1,71 +1,114 @@
-@startuml
-title High-Level System Architecture (Art Gallery: 3-Tier View)
+@startuml system_architecture
 
-actor User
+!define DOCKER <img:https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons/docker.png>
+!define RECTANGLE class
+skinparam defaultFontName Arial
+skinparam roundCorner 10
+skinparam classBackgroundColor White
+skinparam classBorderColor Black
+skinparam shadowing false
 
-' --- Frontend ---
-package "a) Frontend (Client)"{
-    rectangle "Single Page Application \n(React + Vite + TS)" as FE
-}
-' --- Backend layers ---
-package "b) Backend (Server)"  {
-  rectangle "Controller Layer" as Controllers{
-    rectangle "Auth Endpoint: \n-register \n-login \n-logout" as AuthCtrl  
-    rectangle "Other Endpoints" as OtherCtrl 
-    rectangle "checkout Endpoint: \n-placebid \nplaceorder" as CheckoutCtrl
+top to bottom direction
+
+actor "a) User" as user #LightBlue 
+
+rectangle "b) Client Browser\n(React SPA)" as browser #LightBlue
+cloud "DigitalOcean Cloud" #LightGray {
+  rectangle "c) Ubuntu Server + docker Engine" #LightSteelBlue {
+
+      rectangle "c1) CapRover Platform 🐳" as caprover #LightCyan {
+        rectangle "NGINX 🐳\n(CapRover Reverse Proxy & Load Balancer)\n*.bidgallery.publicvm.com" as nginx #Pink
+      }
+
+      package "c2) Frontend App" as frontend_package #LightCyan{
+          rectangle "React + TS 🐳\n(Vite Build)" as fe #Pink
+      }
+
+      package "c3) Backend API" as backend_package #LightCyan{
+        node "Spring Boot + Embeded Tomcat 1..N 🐳\nhttps://backend.bidgallery.publicvm.com" as api #Pink
+      }
+
+      package "c4) Database Stack" as database_package #LightCyan{
+          database "MariaDB 🐳\nsrv-captain--database-db\nUsers, Artists, Products, Orders" as db #Pink
+          rectangle "phpMyAdmin 🐳" as phpmyadmin #Pink
+      }
+      
+      package "c5) Monitoring Apps" as monitoring_package #LightCyan{
+          rectangle "Loki  🐳" as loki #Pink
+          rectangle "Prometheus 🐳" as prometheus  #Pink
+          rectangle "Grafana 🐳" as grafana #Pink
+          rectangle "Promtail 🐳\n(Log Collector)" as promtail #Pink
+      }
+      
+      
   }
-  rectangle "Service Layer" as Services {
-    rectangle "LoggingService" as LogSer
-    rectangle "MetricService" as MetricSer
-
-    rectangle "Business Logic" as BusinessSer {
-      rectangle "Auth Service" as AuthSer
-      rectangle "Products, \nOrders, \nUsers, \nAddresses" as OtherSer
-      rectangle "Payment Service"as PaymentSer
-    }
-  }
-  rectangle "Repository Layer\nDatabase Access (MariaDB CRUD)" as Repo
 }
 
-database "c) MariaDB\nUsers, Artists, Addresses, Products, Orders" as DB
-' --- External services ---
-rectangle "d) External Identity Provider\n(OAuth)" as IdP
-rectangle "e) External Payment API \n(Pipedream Mock)" as Payment
-
-rectangle "f) External Observability Stack" {
-    rectangle "Grafana\n(Dashboards + Explore)" as Grafana
-    rectangle "Prometheus\n(Metrics Storage)" as Prometheus
-    rectangle "Loki\n(Log Aggregation)" as Loki
+package "d) External Services" #LightBlue {
+    rectangle "d1) Payment API" as payment #Pink
+    rectangle "d2) OAuth API" as auth #Pink
 }
 
-' --- Connections (two-way implied) ---
-User -- FE
-FE -- OtherCtrl : API requests / response
-FE -- CheckoutCtrl:  request(bid/order) / response
-FE -- AuthCtrl : send ID token / receive JWT
+
+' --- CORRECT FLOW ---
+user --> browser
+browser --> nginx : "HTTPS Request\n*.bidgallery.publicvm.com"
+nginx -> fe : "GET /\nReact App (Static)"
+nginx --> api : "API Calls /api/*\nLoad Balanced"
+nginx --> grafana : "GET /grafana\nDashboard Access"
+nginx --> prometheus : "GET /prometheus \nAccess Metrics"
+nginx -right-> phpmyadmin : "Database Access"
+
+fe --> nginx : "API Proxy Calls\n/api/*"
+
+' Database & Backend
+api -right-> db : "SQL Queries"
+phpmyadmin --> db : "Database Admin"
+
+' --- CORRECT OBSERVABILITY FLOW ---
+promtail -up-> loki : "Collects & Sends\nContainer Logs"
+api --> prometheus : "Exposes Metrics\n/actuator/prometheus"
+prometheus -down-> grafana : "Provides Metrics\nfor Dashboards"
+loki --> grafana : "Provides Logs\nfor Analysis"
+
+' External Services
+api --> payment : "Payment Processing\nPOST paymentsIntent"
+api --> auth : "OAuth Flow\nPOST /verify user token"
+
+' Additional notes for clarity
+note left of api
+  **API Endpoints:**
+  • Swagger: /swagger-ui/index.html
+  • Authentication: /api/auth/**
+  • Products: /api/products/**
+  • Bidding: /api/checkout/placebid
+  • Orders: /api/checkout/placeorder
+  • Health: /actuator/health
+  • Metrics: /actuator/prometheus
+end note
+
+note right of nginx
+  **CapRover Management:**
+  • Container orchestration
+  • SSL certificate management
+  • Load balancing
+
+  **CapRover NGINX Routes:**
+  • frontend.bidgallery.publicvm.com → React App
+  • backend.bidgallery.publicvm.com → Spring Boot API
+  • grafana.bidgallery.publicvm.com → Grafana
+  • prometheus.bidgallery.publicvm.com → Prometheus
+  • loki.bidgallery.publicvm.com → Loki
+  • phpmyadmin.bidgallery.publicvm.com → phpMyAdmin
+end note
 
 
-Controllers -- MetricSer
-BusinessSer -- LogSer
 
-AuthCtrl -- AuthSer
-CheckoutCtrl -- OtherSer
-CheckoutCtrl -- PaymentSer
-OtherCtrl -- OtherSer
+note left of promtail
+  **Promtail collects from:**
+  • All container logs 🐳
+  • Docker JSON log files
+  • Automatic service discovery
+  • Sends to Loki via HTTP
+end note
 
-MetricSer ..> Prometheus : Exposes metrics via\n/actuator/prometheus
-LogSer ..> Loki : Streams JSON logs with\nstructured fields & correlationId
-
-AuthSer-- Repo : query / return data
-OtherSer -- Repo : query / return data
-Repo -- DB : read/write
-PaymentSer -- Payment : call / response
-AuthSer -- IdP : verify token / result
-FE -- IdP : OAuth request / ID token
-
-' **OBSERVABILITY STACK**
-Prometheus -- Grafana : Metrics dashboards\n(bid success rates, durations)
-Loki -- Grafana : Log exploration\n(correlation tracing, error analysis)
-
-
-@enduml

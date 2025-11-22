@@ -8,42 +8,46 @@ skinparam classBorderColor Black
 skinparam shadowing false
 
 ' --- Backend layers ---
-package "c3) Backend (Server)" #LightYellow {
-  rectangle "1) Controller Layer" as Controllers #LightCyan{
+package "c3) Spring Boot Rest API" #LightCyan {
+  rectangle "1) Controller Layer" as Controllers #LightYellow{
     rectangle "Auth Endpoint: \n-register \n-login \n-logout" as AuthCtrl  #Pink
     rectangle "Other Endpoints" as OtherCtrl #Pink
     rectangle "checkout Endpoint: \n-placebid \nplaceorder" as CheckoutCtrl #Pink
   }
-  rectangle "2) Service Layer" as Services #LightCyan {
+  rectangle "2) Service Layer" as Services #LightYellow {
     rectangle "2.1) Business Logic" as BusinessSer  #LightBlue{
       rectangle "Auth Service" as AuthSer #Pink
       rectangle "Users, \n Artists,\nAddresses, \nProducts, \nOrders" as OtherSer #Pink
       rectangle "Payment Service"as PaymentSer #Pink
     }
 
-    rectangle "2.2) observationService" as obs #LightBlue{
+    rectangle "2.2) observability Service" as obs #LightBlue{
       rectangle "LoggingService" as LogSer #Pink
       rectangle "MetricService" as MetricSer #Pink
     }
   }
 
-  rectangle "3) Repository Layer \nDatabase Access (MariaDB CRUD)" as Repo #LightCyan{
-    rectangle "User, Artists, Address, Products, Order, OrderItems" #Pink  
+  rectangle "3) Repository Layer \nDatabase Access\n(MariaDB CRUD)"  #LightYellow{
+    rectangle "User, \nArtists, \nAddress, \nProducts, \nOrder, \nOrderItems" as Repo #Pink  
   }
  
-  database "4) MariaDB\nUsers, Artists, Addresses, Products, Orders" as DB #Pink
+}
 
-  rectangle "5) Observability Stack" #LightCyan{
-    rectangle "5.1) Grafana\n(Dashboards + Explore)" as Grafana #Pink
-    rectangle "5.2) Prometheus\n(Metrics Storage)" as Prometheus #Pink
-    rectangle "5.3) Loki\n(Log Aggregation)" as Loki #Pink
-  }
+package "C4) Database " #LightCyan{
+  database "MariaDB\nUsers, \nArtists, \nAddresses, \nProducts, \nOrders" as DB #Pink
+
+}
+
+package "c5) Monitoring Stack" #LightCyan {
+  rectangle "c5.1) Grafana\n(Dashboards + Explore)" as Grafana #Pink
+  rectangle "c5.2) Prometheus\n(Metrics Storage)" as Prometheus #Pink
+  rectangle "c5.3) Loki\n(Log Aggregation)" as Loki #Pink
 }
 
   ' --- External services ---
-rectangle "External Services" #LightYellow{
-  rectangle "d) External Identity Provider\n(OAuth)" as IdP #Pink
-  rectangle "e) External Payment API \n(Pipedream Mock)" as Payment #Pink
+rectangle "d) External Services" #LightCyan{
+  rectangle "d.1) \nExternal \nIdentity \nProvider\n(OAuth)" as IdP #Pink
+  rectangle "d.2) \nExternal \nPayment API \n(Pipedream Mock)" as Payment #Pink
 }
 
 
@@ -57,11 +61,14 @@ CheckoutCtrl --> PaymentSer
 CheckoutCtrl --> AuthSer
 AuthCtrl --> AuthSer
 
-MetricSer ..> Prometheus : Exposes metrics via\n/actuator/prometheus
-LogSer ..> Loki : Streams JSON logs with\nstructured fields & correlationId
+AuthSer -[hidden]right- OtherSer : "internal service calls"
+LogSer -[hidden]right- MetricSer : "shared observability"
 
-AuthSer--> Repo : query / return data
-OtherSer --> Repo : query / return data
+MetricSer .down.> Prometheus : Exposes metrics via\n/actuator/prometheus
+LogSer .down.> Loki : Streams JSON logs with\nstructured fields & correlationId
+
+AuthSer-down-> Repo : query / return data
+OtherSer -down-> Repo : query / return data
 Repo --> DB : read/write
 PaymentSer --> Payment : call / response
 AuthSer --> IdP : verify token / result

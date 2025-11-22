@@ -1,6 +1,5 @@
 @startuml domain_model
-skinparam ranksep 3.5
-
+skinparam ranksep 3.7
 ' -------------------
 ' DOMAIN MODEL
 ' -------------------
@@ -51,11 +50,12 @@ class OrderItem {
 ' RELATIONSHIPS
 ' -------------------
 Artist -right-|> User : extends
-User "0..1" -right- "0..*" Order : places
+User "0..1" -- "0..*" Order : places
 User "1" -- "0..*" Address : has
-Artist "1" -- "0..*" Product : creates
-Order "1" -- "1..*" OrderItem : contains
-OrderItem "1" -- "1" Product : references
-Order "1" -- "1" Address : shipsTo
+Order "1" -right- "1" Address : shipsTo
+Artist "1" -down- "0..*" Product : creates
+Order "1" -down- "1..*" OrderItem : contains
+OrderItem "1" -up- "1" Product : references
+
 
 @enduml
