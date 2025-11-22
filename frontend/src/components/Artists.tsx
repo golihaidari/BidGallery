@@ -8,7 +8,7 @@ import "./extraCss/Artists.css";
 import { API_CONFIG } from "../config";
 
 
-//const dataUrl = "/data/artists.json"; triger 22-8
+//const dataUrl = "/data/artists.json"; 
 
 const dataUrl =`${API_CONFIG.baseURL}/artists`
 
