@@ -24,7 +24,7 @@ public class AddressController {
     @Autowired
     private AddressService addressService;
 
-    // -------------------CREATE----------------------------triger 22-5
+    // -------------------CREATE----------------------------triger 22-6
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ResponseEntity<Address> createAddress(@RequestBody Address address) {
