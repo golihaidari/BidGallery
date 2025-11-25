@@ -336,7 +336,7 @@ public class AuthController {
     // -----------------------------LOGOUT-----------------------------
     @GetMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest httpRequest) {
-        String correlationId = (String) httpRequest.getAttribute("correlationId"); // For business
+        String correlationId = (String) httpRequest.getAttribute("correlationId"); 
 
         metricService.incrementCounter("auth.logout", 
         "success", "true",

@@ -1,0 +1,66 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+rectangle "Pipeline Start" as start
+
+rectangle "Frontend CI" as feci
+rectangle "Backend CI" as beci
+
+
+rectangle "E2E Tests" as e2e
+rectangle "Security Scan" as security
+
+rectangle "Frontend CD" as fecd
+rectangle "Backend CD" as becd
+
+rectangle "Smoke Tests" as smoke
+rectangle "Production Live" as prod
+
+start --> feci
+start --> beci
+
+feci --> e2e
+beci --> e2e
+
+e2e --> security
+
+security --> fecd
+security --> becd
+
+fecd --> smoke
+becd --> smoke
+
+smoke --> prod
+
+note left of feci
+npm ci
+tests
+build
+containerize
+push to Docker Hub
+end note
+
+note right of beci
+mvn install
+tests  
+build
+containerize
+push to Docker Hub
+end note
+
+note right of security
+Trivy vulnerability
+scanning
+Blocks deployment
+if critical issues
+end note
+
+note right of smoke
+**Health Verification**
+Frontend & Backend
+connectivity tests
+Service availability
+API endpoints
+end note
+@enduml

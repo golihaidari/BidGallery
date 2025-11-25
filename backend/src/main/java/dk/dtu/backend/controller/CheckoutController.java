@@ -38,8 +38,7 @@ public class CheckoutController {
     // ----------------------------- Place bid -----------------------------
     @PostMapping("/placebid")
     public ResponseEntity<?> placeBid(@RequestBody Map<String, Object> request, HttpServletRequest httpRequest) {
-        //User user = authService.getAuthenticatedUser();
-
+        
         String correlationId = (String) httpRequest.getAttribute("correlationId");
 
         long startTime = System.currentTimeMillis();
@@ -50,7 +49,7 @@ public class CheckoutController {
         try {
             productId = Integer.parseInt(request.get("productId").toString());
             bidAmount = Double.parseDouble(request.get("amount").toString());
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             metricService.incrementCounter("checkout.bid", 
             "success", "false", 
             "reason", "invalid_input",

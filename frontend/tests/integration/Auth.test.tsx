@@ -119,7 +119,7 @@ const MockLogin = () => {
   );
 };
 
-// Fixed MockRegister - proper account type handling
+//proper account type handling
 const MockRegister = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
@@ -144,7 +144,6 @@ const MockRegister = () => {
 
   return (
     <div data-testid="register-page">
-      {/* Fixed: Added accessibility attributes */}
       <label htmlFor="account-type-select" style={{ display: 'none' }}>
         Account Type
       </label>

@@ -1,16 +1,21 @@
 package dk.dtu.backend.controller;
 
-import dk.dtu.backend.persistence.entity.User;
-import dk.dtu.backend.service.AuthService;
-import dk.dtu.backend.service.UserService;
+import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Optional;
+import dk.dtu.backend.persistence.entity.User;
+import dk.dtu.backend.service.UserService;
 
 @RestController
 @RequestMapping("/api/users")
@@ -18,9 +23,6 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    AuthService authService;
 
     //// ----------------------------READ------------------------------
     // Admin can get all users

@@ -1,5 +1,3 @@
-// cypress/e2e/checkout-flow.cy.js
-
 describe('Complete Checkout Flow', () => {
   beforeEach(() => {
     cy.setupBackend();

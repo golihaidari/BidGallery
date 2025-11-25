@@ -1,0 +1,20 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+rectangle "1. Development Phase \n       (dev branch)\n------------\n - CI runs automatically \n -Build Docker images \n -Push to Docker Hub" as dev
+
+rectangle "2. Quality Gate Phase\n     (staging branch) \n-----------------\n - Pull images \n - E2E integration tests \n - Manual review" as staging
+
+rectangle "3. Production Phase \n     (main branch) \n---------------------\n - Security scan \Automated deployment \n - Smoke tests \n - Live" as prod 
+
+dev -> staging
+staging -> prod
+
+note right of prod
+**Critical Gates:**
+Security scan blocks deployment
+Smoke tests verify health
+Frontend + Backend connectivity
+end note
+@enduml

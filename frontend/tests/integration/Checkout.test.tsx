@@ -1,4 +1,3 @@
-// checkout-integration.test.tsx
 import { describe, it, vi, expect, beforeEach } from "vitest";
 import { render, fireEvent, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
@@ -247,7 +246,6 @@ const MockSubmit = () => {
 
   return (
     <div data-testid="submit-page">
-      {/* COMPREHENSIVE CONTEXT VERIFICATION */}
       <div data-testid="order-summary">
         Products: {state.cart.length} | 
         Address: {state.address ? "Yes" : "No"} | 
@@ -379,7 +377,7 @@ describe("Checkout Flow Integration with Context", () => {
     fireEvent.click(screen.getByTestId("submit-bid"));
     await waitFor(() => screen.getByTestId("cart-page"));
 
-    // VERIFY CHECKOUTCONTEXT WAS UPDATED
+    // verify checkoutcontext was updated
     expect(screen.getByTestId("cart-items-count")).toHaveTextContent("1");
     expect(screen.getByTestId("cart-total")).toHaveTextContent("150");
     expect(screen.getByTestId("cart-contents")).toHaveTextContent("Test Painting");
@@ -398,7 +396,7 @@ describe("Checkout Flow Integration with Context", () => {
     fireEvent.click(screen.getByTestId("submit-payment"));
     await waitFor(() => screen.getByTestId("submit-page"));
 
-    // VERIFY ALL CHECKOUTCONTEXT DATA IS PRESENT
+    // verify all checkout context data is present
     expect(screen.getByTestId("order-summary")).toHaveTextContent("Products: 1");
     expect(screen.getByTestId("order-summary")).toHaveTextContent("Address: Yes");
     expect(screen.getByTestId("order-summary")).toHaveTextContent("Payment: mock_payment_123");
@@ -410,7 +408,7 @@ describe("Checkout Flow Integration with Context", () => {
     fireEvent.click(screen.getByTestId("submit-order"));
     await waitFor(() => screen.getByTestId("info-card"));
 
-    // VERIFY CHECKOUTCONTEXT WAS RESET AFTER ORDER
+    // verify checkoutcontext was reset after order
     expect(screen.getByTestId("cart-after-order")).toHaveTextContent("0");
     expect(screen.getByTestId("address-after-order")).toHaveTextContent("no");
     expect(screen.getByTestId("payment-after-order")).toHaveTextContent("none");
@@ -419,7 +417,7 @@ describe("Checkout Flow Integration with Context", () => {
     fireEvent.click(screen.getByTestId("continue-shopping"));
     await waitFor(() => screen.getByTestId("products-page"));
 
-    // VERIFY CHECKOUTCONTEXT REMAINS RESET
+    // verify checkoutcontext remains reset
     expect(screen.getByTestId("cart-count")).toHaveTextContent("0");
     expect(screen.getByTestId("has-address")).toHaveTextContent("no");
     expect(screen.getByTestId("payment-intent")).toHaveTextContent("none");

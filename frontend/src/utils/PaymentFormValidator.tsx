@@ -4,11 +4,6 @@ import type { GiftCard } from "@interfaces/GiftCard";
 export type PaymentErrors = { [key: string]: string };
 
 export default class PaymentFormValidator {
- /*
-  private static required(value: string, msg = "This field is required") {
-    return value?.trim() ? "" : msg;
-  }
-  */
 
   // ---------- Credit Card ----------
   static validateCreditCard(form: CreditCard): PaymentErrors {

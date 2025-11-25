@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setUserEmail(null); // clears context
     console.log("Logout successful, context cleared");
+    //alert("Logout successful");
   };
 
   return (
