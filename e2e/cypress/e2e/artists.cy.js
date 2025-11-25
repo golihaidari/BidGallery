@@ -1,4 +1,3 @@
-// cypress/e2e/artists.cy.js
 describe('Artist Browsing Flow', () => {
   beforeEach(() => {
     cy.setupBackend();

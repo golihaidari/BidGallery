@@ -1,0 +1,31 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+rectangle "Code Commit" as commit
+rectangle "Continuous Integration" as ci
+rectangle "E2E Tests" as e2e
+rectangle "Security Scan" as security
+rectangle "Deployment" as deploy
+rectangle "Smoke Tests" as smoke
+rectangle "Production Live" as prod
+
+commit -> ci : Push to dev
+ci -> e2e : Tests pass
+e2e -> security : E2E pass
+security -> deploy : No vulnerabilities
+deploy -> smoke : Services deployed
+smoke -> prod : Health verified
+
+note bottom of security
+**Critical Gate**
+Blocks deployment if
+critical issues found
+end note
+
+note bottom of smoke
+**Health Verification**
+Frontend: https://frontend.bidgallery.publicvm.com
+Backend: https://backend.bidgallery.publicvm.com/health
+end note
+@enduml

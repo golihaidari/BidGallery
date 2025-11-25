@@ -37,13 +37,13 @@ public class ArtistController {
     @GetMapping
     public ResponseEntity<List<ArtistDTO>> getAllArtists(HttpServletRequest httpRequest) {
 
-        String correlationId = (String) httpRequest.getAttribute("correlationId"); // For business
+        String correlationId = (String) httpRequest.getAttribute("correlationId"); 
 
         long startTime = System.currentTimeMillis();
 
         List<Artist> artists = artistService.getAllArtists();
 
-                // Map Product entities to ProductDTO
+        // Map Product entities to ProductDTO
         List<ArtistDTO> artistDTOs = DtoMapper.toArtistDTOList(artists);
 
         long duration = System.currentTimeMillis() - startTime;

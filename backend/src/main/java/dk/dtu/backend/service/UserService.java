@@ -1,14 +1,14 @@
 package dk.dtu.backend.service;
 
-import dk.dtu.backend.persistence.entity.User;
-import dk.dtu.backend.persistence.repository.UserRepository;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import dk.dtu.backend.persistence.entity.User;
+import dk.dtu.backend.persistence.repository.UserRepository;
 
 @Service
 public class UserService {
@@ -20,22 +20,7 @@ public class UserService {
     private LoggingService loggingService;
 
     // ----------------------------- CREATE -----------------------------
-    /*public boolean saveUser(User user) {
-        try {
-            userRepository.save(user);
-            loggingService.info("User saved successfully", Map.of(
-                "email", user.getEmail(),
-                "action", "create"
-            ));
-            return true;
-        } catch (Exception e) {
-            loggingService.error("Error saving user", Map.of(
-                "email", user.getEmail(),
-                "error", e.getMessage()
-            ));
-            return false;
-        }
-    }*/
+   // user would be registered in the authController
 
     // ----------------------------- READ -----------------------------
     public Optional<User> getUserById(Integer id) {

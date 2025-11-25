@@ -15,7 +15,7 @@ vi.mock("../../src/hook/fetchData", () => ({
   }),
 }));
 
-// Mock Firebase if needed
+// Mock Firebase
 vi.mock("../../src/firebase/firebase", () => ({
   auth: {},
 }));
