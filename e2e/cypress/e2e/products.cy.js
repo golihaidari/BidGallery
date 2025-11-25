@@ -1,4 +1,3 @@
-// cypress/e2e/products.cy.js
 describe('Product Browsing and Bid Flow', () => {
   beforeEach(() => {
     cy.setupBackend();

@@ -67,38 +67,6 @@ public class AddressService {
         return address;
     }
 
-    /*
-    public Optional<Address> findByAddressFields(String address1, String city, String postalCode) {
-        loggingService.info("Address lookup by fields started", Map.of(
-            "address1", address1,
-            "city", city,
-            "postalCode", postalCode
-        ));
-
-        Optional<Address> addressOpt = addressRepository.findByAddress1AndCityAndPostalCode(address1, city, postalCode);
-        loggingService.info("Address lookup by fields completed", Map.of(
-            "address1", address1,
-            "city", city,
-            "postalCode", postalCode,
-            "found", String.valueOf(addressOpt.isPresent())
-        ));
-        return addressOpt;
-    }
-
-    public Optional<Address> findByUserAndAddress(User user, String address1, String city, String postalCode) {
-        Optional<Address> addressOpt = addressRepository.findByUserAndAddress1AndCityAndPostalCode(user, address1, city, postalCode);
-        loggingService.info("Fetched address by user and fields", Map.of(
-            "userId", String.valueOf(user.getId()),
-            "address1", address1,
-            "city", city,
-            "postalCode", postalCode,
-            "found", String.valueOf(addressOpt.isPresent())
-        ));
-        return addressOpt;
-    }
-        
-    */
-
     public Optional<Address> getAddressById(Integer id) {
         Optional<Address> addressOpt = addressRepository.findById(id);
         loggingService.info("Fetched address by ID", Map.of(

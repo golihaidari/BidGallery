@@ -1,4 +1,3 @@
-// cypress/e2e/auth.cy.js
 describe('Authentication Flows - E2E', () => {
   beforeEach(() => {
     cy.setupBackend();
