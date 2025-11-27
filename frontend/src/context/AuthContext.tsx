@@ -34,10 +34,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserEmail(email);
   };
 
-  const { sendRequest, data: logoutData } = useFetch<{ success: boolean; message: string }>(`${API_CONFIG.baseURL}/auth/logout`);
+  const { sendRequest: logoutRequest } = useFetch<{ success: boolean; message: string }>(`${API_CONFIG.baseURL}/auth/logout`);
   const logout = async () => {
     try{
-      await sendRequest(
+      await logoutRequest(
         { method: "GET", credentials: "include" },
         "Logout failed"
       );
@@ -54,8 +54,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error("Logout failed:", error);
     }
-    
-    
   };
 
   return (
