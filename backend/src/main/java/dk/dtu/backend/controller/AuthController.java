@@ -351,6 +351,21 @@ public class AuthController {
                 ));
     }
 
+    // -----------------------------check: trigger on refresh request-----------------------------
+    @GetMapping("/check")
+    public ResponseEntity<?> checkAuthentication() {
+        User user = authService.getAuthenticatedUser();
+        
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("authenticated", false));
+        }
+        
+        return ResponseEntity.ok(Map.of(
+            "authenticated", true,
+            "email", user.getEmail()
+        ));
+    }
+
     // -----------------------------HELPER-----------------------------
     private boolean isValidEmail(String email) {
         String regex = "^[A-Za-z0-9+_.-]+@(.+)$";

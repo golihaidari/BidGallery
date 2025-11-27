@@ -45,7 +45,9 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/auth/register",
                     "/api/auth/login",
-                    "/api/auth/login/firebase"
+                    "/api/auth/login/firebase",
+                    "/api/auth/check",
+                    "/api/auth/logout"
                 ).permitAll()
                 // Checkout public endpoints
                 .requestMatchers(

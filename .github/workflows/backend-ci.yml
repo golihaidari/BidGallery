@@ -27,6 +27,9 @@ jobs:
         SPRING_DATASOURCE_PASSWORD=password
         SPRING_JPA_HIBERNATE_DDL_AUTO=update
         FIREBASE_SERVICE_ACCOUNT_FILE=/app/firebase-service.json
+        # Cookie settings for development
+        APP_COOKIE_SECURE=false
+        APP_COOKIE_SAME_SITE=None
         EOF
         
         # Create firebase-service.json
