@@ -2,7 +2,18 @@ package dk.dtu.backend.persistence.entity;
 
 import java.util.List;
 
-import org.hibernate.validator.constraints.Length;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -31,8 +42,8 @@ public class User {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @NotBlank(message = "Password is required")
-    @Length(min = 8, message = "Password must be at least 8 characters")
+    //@NotBlank(message = "Password is required")
+    //@Length(min = 8, message = "Password must be at least 8 characters")
     //@Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$",  message = "Password must contain at least one uppercase letter, one lowercase letter, and one number")
     @Column(name = "password", nullable = true)
     private String password;

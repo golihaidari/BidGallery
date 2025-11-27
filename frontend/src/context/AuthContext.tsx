@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import {API_CONFIG} from "../config.tsx";
 import useFetch from "@hook/fetchData.tsx";
@@ -8,25 +8,52 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  //trigger on refresh start
+  const { sendRequest: checkAuth, data: authData } = useFetch<{ authenticated: boolean; email: string }>(`${API_CONFIG.baseURL}/auth/check`);
+  useEffect(() => {
+    checkAuth(
+      { 
+        method: "GET", 
+        credentials: "include" 
+      },
+      "Auth check failed"
+    );
+  }, []);
+  useEffect(() => {
+    if (authData) {
+      if (authData.authenticated && authData.email) {
+        setUserEmail(authData.email);
+      } else {
+        setUserEmail(null);
+      }
+    }
+  }, [authData]);
+  //trigger on refresh ends
 
   const login = (email: string) => {
     setUserEmail(email);
   };
 
-  const { sendRequest, error } = useFetch<{ success: boolean }>(`${API_CONFIG.baseURL}/auth/logout`);
+  const { sendRequest: logoutRequest } = useFetch<{ success: boolean; message: string }>(`${API_CONFIG.baseURL}/auth/logout`);
   const logout = async () => {
-    await sendRequest(
-      { method: "GET", credentials: "include" },
-      "Logout failed"
-    );
+    try{
+      await logoutRequest(
+        { method: "GET", credentials: "include" },
+        "Logout failed"
+      );
 
-    if (error) {
-      alert(error); // or show it in your UI
-      return; // stop clearing context if needed
+      setUserEmail(null);
+      
+      // Optional: Refresh the auth check
+      setTimeout(() => {
+        checkAuth(
+          { method: "GET", credentials: "include" },
+          "Auth check failed"
+        );
+      }, 100)
+    } catch (error) {
+      console.error("Logout failed:", error);
     }
-    setUserEmail(null); // clears context
-    console.log("Logout successful, context cleared");
-    //alert("Logout successful");
   };
 
   return (
