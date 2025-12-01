@@ -24,17 +24,20 @@ const FormTemplate: React.FC<FormTemplateProps> = ({
   disableSubmit = true
 }) => {
   return (
-    <Box
+    <div className="global-container">
+    <Box 
       sx={{
         width: "100%",
-        maxWidth: 420,
-        padding: 4,
+        maxWidth: 450,
+        padding: { xs: 2, sm: 3 },
         borderRadius: 3,
         backgroundColor: "#fff",
         boxShadow: "0px 4px 12px rgba(0,0,0,0.1)",
         textAlign: "center",
-        margin: "0 auto",
-        display: "flow",
+         margin: 0,
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
       }}
     >
       <Typography variant="h6" sx={{ mb: 3 }}>
@@ -71,6 +74,7 @@ const FormTemplate: React.FC<FormTemplateProps> = ({
         )}
       </form>
     </Box>
+    </div>
   );
 };
 
