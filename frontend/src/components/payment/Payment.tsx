@@ -11,7 +11,8 @@ const Payment = () => {
   const [paymentType, setPaymentType] = useState<string>(PaymentType.creditCard);
 
   return (
-    <Box className="payment-container">
+    <div className="global-container">
+    <Box className="global-container">
       <PaymentOptions paymentType={paymentType} setPaymentType={setPaymentType} />
 
       <Card className="payment-card">
@@ -20,6 +21,7 @@ const Payment = () => {
         {paymentType === PaymentType.giftCard && <GiftCardForm />}
       </Card>
     </Box>
+    </div>
   );
 };
 
