@@ -14,7 +14,7 @@
 
 /* MobilePay phone input full width */
 .react-tel-input .form-control {
-  margin-right: 500px;
+  margin-right: auto;
   width: 100% !important;
   height: 48px;
   border-radius: 2px;
@@ -23,8 +23,8 @@
 /* Responsive rules */
 @media (max-width: 500px) {
   .payment-options {
-    max-width: 90%;           /* shrink on small screens */
-    padding: 10px;
+    max-width: 100%;           /* shrink on small screens */
+    padding: 20px;
   }
   
   /* Optional: tighter spacing on small screens */
