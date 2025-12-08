@@ -33,7 +33,7 @@ build/
 .vscode/
 
 /resources/
-
+backend/logs
 firebase-service.json
 
 .env.development

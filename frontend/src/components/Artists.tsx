@@ -7,7 +7,7 @@ import Loader from "@components/common/Loader";
 import "./extraCss/Artists.css";
 import { API_CONFIG } from "../config";
 
-//triger forntend CI for demo
+//triger forntend CI for demo 1
 
 //const dataUrl = "/data/artists.json"; 
 
