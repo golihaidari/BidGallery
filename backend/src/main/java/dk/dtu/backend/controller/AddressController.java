@@ -21,7 +21,7 @@ import dk.dtu.backend.service.AddressService;
 @RequestMapping("/api/addresses")
 public class AddressController {
 
-    //triger backend CI for clean demo
+    //triger backend CI for final demo
 
     @Autowired
     private AddressService addressService;
